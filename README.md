@@ -8,6 +8,15 @@
 
 ![BidGate score view](assets/score.png)
 
+<details>
+<summary>Decision view (sensitivity tornado, weakest links, pre-mortem) and a printed memo</summary>
+
+![BidGate decision view](assets/decision.png)
+
+A one-page memo (economics, full scorecard, decision record) prints straight from the app — see [`assets/memo.pdf`](assets/memo.pdf) for an example.
+
+</details>
+
 ---
 
 ## The problem
