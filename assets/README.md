@@ -1,0 +1,1 @@
+Screenshots used by the top-level README. `score.png` is a headless-Chromium capture of the Score view with the three synthetic sample bids loaded; charts render via a Chart.js stub in the capture environment, so re-capture from the live GitHub Pages build for final images.
