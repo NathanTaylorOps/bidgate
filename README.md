@@ -2,7 +2,7 @@
 
 **Go / no-go bid qualification for flooring, tile & specialty-surface subcontractors.**
 
-> Live demo → [nathan-taylor-ops.github.io/bidgate](https://nathan-taylor-ops.github.io/bidgate/) · Single file → [`dist/bidgate.html`](dist/bidgate.html) (download, open, works offline)
+> Live demo → [NathanTaylorOps.github.io/bidgate](https://NathanTaylorOps.github.io/bidgate/) · Single file → [`dist/bidgate.html`](dist/bidgate.html) (download, open, works offline)
 
 ![tests](https://img.shields.io/badge/tests-43%20passing-009E73) ![deps](https://img.shields.io/badge/runtime%20deps-Chart.js%20only-0072B2) ![build](https://img.shields.io/badge/build-none-8f96ad) ![licence](https://img.shields.io/badge/licence-MIT-8f96ad)
 
@@ -76,7 +76,7 @@ docs/adr/                  architecture decision records
 The engine is pure functions with no DOM, so it is unit-tested directly. The UI is plain DOM + Chart.js from cdnjs — no framework, no bundler, no npm install.
 
 ```bash
-git clone https://github.com/nathan-taylor-ops/bidgate.git
+git clone https://github.com/NathanTaylorOps/bidgate.git
 cd bidgate
 node --test            # 43 tests
 node scripts/build-single.mjs # dist/bidgate.html

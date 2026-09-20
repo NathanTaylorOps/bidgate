@@ -14,11 +14,11 @@
   "author": "Nathan Taylor <nathan.taylor.ops@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nathan-taylor-ops/bidgate.git"
+    "url": "git+https://github.com/NathanTaylorOps/bidgate.git"
   },
-  "homepage": "https://nathan-taylor-ops.github.io/bidgate/",
+  "homepage": "https://NathanTaylorOps.github.io/bidgate/",
   "bugs": {
-    "url": "https://github.com/nathan-taylor-ops/bidgate/issues"
+    "url": "https://github.com/NathanTaylorOps/bidgate/issues"
   },
   "keywords": ["bid-qualification", "go-no-go", "estimating", "construction", "subcontractor", "decision-support"]
 }

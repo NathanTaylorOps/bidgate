@@ -37,10 +37,10 @@ for (const [k, src] of modules) imports[k] = 'data:text/javascript;base64,' + Bu
 let html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const importMap = `<script type="importmap">${JSON.stringify({ imports })}</script>`;
 html = html.replace(/<script type="module" src="\.\/src\/ui\/app\.js"><\/script>/, `${importMap}\n<script type="module">import 'bidgate/${entry}';</script>`);
-html = html.replace('<title>BidGate</title>', '<title>BidGate</title>\n<!-- Single-file build. Source: https://github.com/nathan-taylor-ops/bidgate -->');
+html = html.replace('<title>BidGate</title>', '<title>BidGate</title>\n<!-- Single-file build. Source: https://github.com/NathanTaylorOps/bidgate -->');
 // index.html already links METHODOLOGY.md by absolute GitHub URL (the single file may be opened from a USB stick,
 // where a relative docs/ link would dangle). This rewrite is kept as a no-op-safe guard should it ever go relative again.
-html = html.replace('href="docs/METHODOLOGY.md"', 'href="https://github.com/nathan-taylor-ops/bidgate/blob/main/docs/METHODOLOGY.md"');
+html = html.replace('href="docs/METHODOLOGY.md"', 'href="https://github.com/NathanTaylorOps/bidgate/blob/main/docs/METHODOLOGY.md"');
 
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
 fs.writeFileSync(path.join(root, 'dist', 'bidgate.html'), html);
