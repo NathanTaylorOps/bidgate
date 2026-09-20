@@ -1,0 +1,24 @@
+{
+  "name": "bidgate",
+  "version": "3.0.0",
+  "description": "Go / no-go bid qualification for flooring, tile and specialty-surface subcontractors. Gates before scores, EV with uncertainty, materials & installation risk, calibration loop.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "build": "node scripts/build-single.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "serve": "python3 -m http.server 8080"
+  },
+  "license": "MIT",
+  "author": "Nathan Taylor <nathan.taylor.ops@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nathan-taylor-ops/bidgate.git"
+  },
+  "homepage": "https://nathan-taylor-ops.github.io/bidgate/",
+  "bugs": {
+    "url": "https://github.com/nathan-taylor-ops/bidgate/issues"
+  },
+  "keywords": ["bid-qualification", "go-no-go", "estimating", "construction", "subcontractor", "decision-support"]
+}
