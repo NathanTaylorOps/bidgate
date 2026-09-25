@@ -15,6 +15,11 @@ jobs:
         with: { node-version: 22 }
       - run: node --test
       - run: node scripts/build-single.mjs
+      # dist/bidgate.html is committed for anyone who wants a single downloadable file — CI proves it's
+      # never allowed to drift from src by rebuilding it here and failing if that changes anything.
+      - run: git diff --exit-code dist/
+      - run: npm install --no-save playwright && npx playwright install --with-deps chromium
+      - run: node scripts/smoke.mjs
       - uses: actions/upload-artifact@v4
         with: { name: bidgate-single-file, path: dist/bidgate.html }
   deploy:

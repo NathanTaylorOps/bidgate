@@ -1,6 +1,6 @@
 {
   "name": "bidgate",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "description": "Go / no-go bid qualification for flooring, tile and specialty-surface subcontractors. Gates before scores, EV with uncertainty, materials & installation risk, calibration loop.",
   "type": "module",
   "private": true,
@@ -9,6 +9,9 @@
     "build": "node scripts/build-single.mjs",
     "smoke": "node scripts/smoke.mjs",
     "serve": "python3 -m http.server 8080"
+  },
+  "devDependencies": {
+    "playwright": "^1.47.0"
   },
   "license": "MIT",
   "author": "Nathan Taylor <nathan.taylor.ops@gmail.com>",
