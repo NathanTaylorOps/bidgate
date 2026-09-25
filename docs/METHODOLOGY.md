@@ -111,15 +111,15 @@ None of these are modelled as automatic gate *constants* the way QBCC MFR thresh
 
 ## 11. Materials & Installation (replaces Self-Perform & Shops)
 
-The original tool's Self-Perform & Shops group modelled a vertically-integrated builder's owned trade shops: hours-based utilisation tracking, shop transfer pricing, and warranty framed as a profit centre through service contracts. None of that applies to a subcontractor whose whole scope *is* installation labour and material — there is no owned shop to load or idle, and subs do not typically run the service-contract business a vertically-integrated builder can.
+The 2.0 release's Self-Perform & Shops group modelled a vertically-integrated builder's owned trade shops: hours-based utilisation tracking, shop transfer pricing, and warranty framed as a profit centre through service contracts. None of that applies to a subcontractor whose whole scope *is* installation labour and material — there is no owned shop to load or idle, and subs do not typically run the service-contract business a vertically-integrated builder can.
 
 The replacement group, Materials & Installation, is scored qualitatively like every other group (no separate hours-tracking widget):
 
 - **Price/lead-time volatility** — who carries escalation risk between bid and install for commodity-linked materials (LVT resin, carpet-tile backing, synthetic-turf polymer).
 - **Installer certification** — not every flooring crew can install synthetic turf or large-format porcelain to spec; manufacturer certification is the standard proxy trade qualification questionnaires use.
 - **QC/moisture documentation** — a substrate-acceptance and moisture-test record (ASTM F710/F2170) that would defend a warranty claim.
-- **Specialist-sub dependency** (specialty-surface preset only) — the sub-sub-dependency risk pattern carried over from the original tool's bespoke-scope criterion, narrowed to genuinely specialty scopes (turf infill suppliers, moisture-remediation subs).
-- **Warranty/callback exposure by failure mode** — moisture-related delamination, grout/tile cracking, turf seam failure are the industry's named leading callback causes; this is a modest, honest exposure check, not the original tool's warranty-as-profit-centre framing (that was specific to a vertically-integrated builder's service-contract business).
+- **Specialist-sub dependency** (specialty-surface preset only) — the sub-sub-dependency risk pattern carried over from the 2.0 release's bespoke-scope criterion, narrowed to genuinely specialty scopes (turf infill suppliers, moisture-remediation subs).
+- **Warranty/callback exposure by failure mode** — moisture-related delamination, grout/tile cracking, turf seam failure are the industry's named leading callback causes; this is a modest, honest exposure check, not the 2.0 release's warranty-as-profit-centre framing (that was specific to a vertically-integrated builder's service-contract business).
 
 ## 12. Calibration loop
 

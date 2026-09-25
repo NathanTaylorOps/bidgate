@@ -1,4 +1,4 @@
-# Research 05 — Decision-science rigour, UX/reporting, and open-source portfolio positioning for a bid go/no-go tool
+# Research — Decision-science rigour and UX/reporting spec for a bid go/no-go tool
 
 Scope: single-file HTML/JS (Chart.js) bid-qualification tool for a small construction contractor (written before the rescope to a flooring / tile / specialty-surface subcontractor); published on GitHub Pages as a portfolio piece by an ops/estimating leader. v1 is a weighted 1–5 additive scorecard with RAG verdict, deal-killers, EV panel, bar+radar charts, presets, localStorage saved bids, CSV.
 
@@ -119,71 +119,6 @@ Priority key: P0 = ship before calling it "market-leading"; P1 = next; P2 = nice
 20. Empty-state copy for every view (no bids, no outcomes yet, no comparison selected).
 
 Design references: Guesstimate (uncertainty drawn behind the number) ([repo](https://github.com/getguesstimate/guesstimate-app)); it-tools (clean tool-per-card UX, 40k stars) ([README](https://github.com/CorentinTh/it-tools/blob/main/README.md)); Decision Frameworks' tornado guidance ([blog](https://decisionframeworks.com/blog/how-to-build-and-interpret-tornado-diagrams-for-sensitivity-analysis)); Zeiss DecisionMatrixHelper for "justification per rating" and crash-recovery autosave ([repo](https://github.com/zeiss-digital-innovation/DecisionMatrixHelper)).
-
----
-
-## PART C — Open-source portfolio positioning
-
-### C1. What the audience actually evaluates (evidence quality: weak)
-
-There is no rigorous survey of how non-engineer hiring managers assess repos; the available material is practitioner opinion. The consistent claims: 3–5 well-documented projects beat many; README must state the problem, the intended user, key decisions, screenshots/GIF, iteration/lessons learned, and business relevance ("improved efficiency… operational challenges" rather than tutorial clones) ([SOLTECH](https://soltech.net/what-do-hiring-managers-actually-look-for-in-a-github-portfolio/) — one staffing firm's opinion, no data; similar from [Reczee](https://www.reczee.com/blog/what-do-hiring-managers-see-on-my-github-profile), [Instahyre](https://resources.instahyre.com/blog/github-profile-checklist/)). For the Microsoft "Frontier Firm" framing, the 2025 Work Trend Index (marketing, self-reported survey) prizes people who "build, delegate to, and manage agents" and who can judge human-vs-agent task allocation ([Microsoft WTI 2025](https://www.microsoft.com/en-us/worklab/work-trend-index/2025-the-year-the-frontier-firm-is-born)). Implication: the repo must read as *a domain expert who encoded judgement into a tool and measured it*, not as a coding exercise. The METHODOLOGY.md and calibration loop are the résumé; the JavaScript is incidental.
-
-### C2. Exemplar repos — what they do well
-
-| Repo | Stars (fetched Sep 2026) | Take from it |
-|---|---|---|
-| [getguesstimate/guesstimate-app](https://github.com/getguesstimate/guesstimate-app) | 2.4k, MIT | Uncertainty as first-class UI; README opens with purpose then GIF walkthroughs; 5,000-sample Monte Carlo on every edit |
-| [quantified-uncertainty/squiggle](https://github.com/quantified-uncertainty/squiggle) | (monorepo) | Estimation-as-code; public model library — pattern for a `/models` folder of preset scorecards |
-| [TiddlyWiki/TiddlyWiki5](https://github.com/TiddlyWiki/TiddlyWiki5) | 8.7k | Proof that single-HTML-file, local-first apps can be serious software; strong governance docs (CONTRIBUTING, CoC) |
-| [CorentinTh/it-tools](https://github.com/corentinth/it-tools) | 40.1k, GPLv3 | Tagline + live demo first; roadmap via issues; explicit self-host section; but *no screenshots* — a gap you can beat |
-| [dkalinchenko/rationalize.io](https://github.com/dkalinchenko/rationalize.io) | 7 | Vanilla JS Pugh matrix with sensitivity analysis and custom domain; author literally ships their résumé in the repo — the portfolio intent is naked; copy the intent, not the execution |
-| [ilovefreesw/WeightedDecisionMatrix](https://github.com/ilovefreesw/WeightedDecisionMatrix) | 2, MIT | Methodology written in the README (formula + 6-step process); GitHub Pages demo; zero tests — typical of the category |
-| [zeiss-digital-innovation/DecisionMatrixHelper](https://github.com/zeiss-digital-innovation/DecisionMatrixHelper) | 0 | Wizard flow, justification per rating, autosave with crash recovery, alternatives-first vs criteria-first paths; over-engineered stack (Quasar/TS/Docker) with no demo — shows that stack ≠ traction |
-| [adr/madr](https://github.com/adr/madr) | — | The ADR template to adopt |
-| [olivierlacan/keep-a-changelog](https://github.com/olivierlacan/keep-a-changelog) | — | CHANGELOG format |
-
-Blunt observation: the "decision matrix" category on GitHub is a graveyard of 0–10-star repos with no tests, no methodology, no outcome loop ([GitHub topic: decision-making](https://github.com/topics/decision-making?l=html&o=asc&s=forks)). The bar to be the best bid/no-go tool on GitHub is low; the bar to look credible to a GM is "did you close the loop on real outcomes".
-
-### C3. Repo blueprint
-
-```
-bid-qualifier/
-├─ index.html                 # single-file app; imports ./src/*.js as ES modules (still zero build)
-├─ src/
-│  ├─ scoring.js              # pure: gates(), weightedScore(), verdict(), switchingValues()
-│  ├─ weights.js              # pure: swingWeights(), ahpPriorities(), consistencyRatio()
-│  ├─ montecarlo.js           # pure: betaPert(), simulate(), percentiles()
-│  ├─ calibration.js          # pure: brier(), murphyDecomposition(), reliabilityBins()
-│  ├─ memo.js                 # renders decision memo HTML
-│  ├─ storage.js              # localStorage + JSON schema versioning + URL hash (lz-string)
-│  └─ ui.js                   # DOM/Chart.js wiring only
-├─ presets/                   # multifamily.json, commercial-ti.json, specialty-turf.json (with BARS anchors)
-├─ samples/                   # sample-bids.json (GO / gated NO-GO / AMBER) + sample-outcomes.json
-├─ tests/                     # Vitest: scoring.test.js, weights.test.js (CR against Saaty worked example),
-│                             #   montecarlo.test.js (mean ≈ PERT mean), calibration.test.js (Brier known values)
-├─ docs/
-│  ├─ METHODOLOGY.md          # gates→swing weights→BARS→score→sensitivity→MC→calibration; formulas; sources
-│  ├─ adr/                    # 0001-single-file-no-build.md … (MADR)
-│  └─ screenshots/, demo.gif
-├─ .github/workflows/ci.yml   # npm test → deploy Pages on main
-├─ README.md  CHANGELOG.md  CONTRIBUTING.md  LICENSE  SECURITY.md  CITATION.cff
-```
-
-Keeping `index.html` single-file while testing pure functions: use `<script type="module">` importing `./src/*.js` (works on GitHub Pages with no bundler); Vitest runs the same modules in Node ([Vitest](https://github.com/vitest-dev/vitest); CI badge via [vitest-badge-action](https://github.com/marketplace/actions/vitest-badge-action) or a plain workflow status badge). If the owner insists on one literal file, keep a 30-line `build.sh` that inlines modules — and record that as an ADR.
-
-**README outline**: tagline (one sentence, domain first: "Go/No-Go for flooring, tile & specialty-surface subcontractors — gates, weighted score, margin Monte Carlo, and a calibration loop, in one HTML file"); badges (CI, licence, Pages, "no tracking"); live demo link + 20-second GIF; the problem (need-for-work bias, compensatory scorecards hide deal-killers, nobody records outcomes); features (grouped Simple/Expert); methodology summary linking METHODOLOGY.md; architecture + why single-file (link ADR-0001); decisions & trade-offs; roadmap; "why I built this" (2 paragraphs, first person, operational credibility); privacy; contributing; licence.
-
-**ADR list** (MADR format: Context / Decision drivers / Options / Outcome / Consequences ([adr.github.io templates](https://adr.github.io/adr-templates/))): 0001 single-file, no build; 0002 gates precede compensatory score; 0003 swing weighting default, AHP optional; 0004 beta-PERT not triangular; 0005 localStorage + URL hash, no backend; 0006 Okabe-Ito + icon dual encoding; 0007 optional BYOK AI layer is client-side only; 0008 MIT licence.
-
-**Licence**: MIT vs Apache-2.0 — Apache adds an explicit patent grant and NOTICE handling; for a small tool with no patent exposure, MIT is the community default and lowest friction ([FOSSHub comparison](https://www.fosshub.com/resources/licensing/mit-vs-apache/); [Safeguard](https://safeguard.sh/resources/blog/mit-license-vs-apache-2-0-which-to-pick)). Pick MIT; record in ADR-0008.
-
-**Versioning & changelog**: SemVer; Keep a Changelog 1.0.0 with `Unreleased` section and Added/Changed/Deprecated/Removed/Fixed/Security groups ([keepachangelog.com](https://keepachangelog.com/en/1.0.0/)). Treat a preset schema change as a MAJOR bump — that is the honest signal to users with saved bids.
-
-**Test plan** (pure functions only; ~40 tests): gate fail forces NO-GO regardless of score; additive score with known weights; switching value returns the smallest flipping delta; AHP CR reproduces Saaty's textbook example within 0.01; RI table lookup; PERT sample mean within 1% of (a+4m+b)/6 over 50k draws; Brier of all-0.5 forecasts = 0.25; reliability bins sum to N; JSON schema migration v1→v2; lz-string round-trip.
-
-### C4. Optional AI layer without overclaiming
-
-Pattern: "Paste tender → pre-score with quoted evidence". Client-side only, bring-your-own-key stored in `sessionStorage` (not localStorage), never sent anywhere but the model vendor. Anthropic's API allows direct browser calls with the `anthropic-dangerous-direct-browser-access: true` header — the name is a deliberate warning that a key in the browser is the user's key at the user's risk, which is exactly the BYOK posture ([Simon Willison](https://simonwillison.net/2024/Aug/23/anthropic-dangerous-direct-browser-access/); [DEV BYOK example](https://dev.to/sendotltd/calling-the-anthropic-api-directly-from-the-browser-a-150-line-byok-comparison-tool-for-opus--nh)). Design rules that keep it honest: the model may only *propose* a score per criterion and must return a verbatim quote from the pasted text as evidence, or "no evidence found"; the user accepts/rejects each proposal; accepted AI proposals are tagged in the audit trail; gates are never AI-set. Document-QA hallucination rates are non-trivial and rise with context length ([arXiv 2603.08274](https://arxiv.org/html/2603.08274v1)), so the README should say "drafts, cites, never decides" and show a screenshot of a rejected proposal. This is the feature that speaks directly to the "agent boss" framing in the Microsoft material — human sets the rubric and gates, agent does the reading, human keeps the decision.
 
 ---
 
