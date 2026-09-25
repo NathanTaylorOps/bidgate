@@ -418,8 +418,9 @@ test('encodeShare / decodeShare round-trip a bid, including non-ASCII text, as a
   const o = decodeShare(hash);
   assert.equal(o.v, SCHEMA_VERSION);
   assert.equal(o.presetId, 'multifamily');
-  assert.deepEqual(o.bid, bid);
-  assert.deepEqual(o.weightsOverride, state.weightsOverride);
+  // The sender's effective weights travel with the bid alone — never into the recipient's own Settings.
+  assert.deepEqual(o.bid, { ...bid, weightsOverride: { client: 30 } });
+  assert.deepEqual(o.weights, { client: 30 });
   assert.throws(() => decodeShare(encodeShare({ presetId: 'multifamily', bid: null, weightsOverride: {} })), /bad share/);
 });
 

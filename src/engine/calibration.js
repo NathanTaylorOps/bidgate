@@ -7,7 +7,12 @@
  *  hitRates(records)       by count and by dollar, split by route / verdict / preset.
  *  criterionSeparation()   won-vs-lost mean score per criterion — an "explore" view, NOT a regression.
  *                          With < 60 outcomes do not fit a model (ADR-0006); show the separation and let the user reason.
- *  murphy(records)         Murphy decomposition: reliability − resolution + uncertainty.
+ *  murphy(records)         Murphy (1973) decomposition on the same 5 equal-width bins as the reliability diagram:
+ *                          BS = reliability − resolution + uncertainty + within-bin term. Binning makes the first
+ *                          three terms readable (each is a bin-level quantity you can see on the diagram) at the
+ *                          cost of a small residual — the within-bin variance of forecasts minus twice the
+ *                          within-bin forecast/outcome covariance (Stephenson, Coelho & Jolliffe 2008) — which is
+ *                          reported rather than hidden. Group by exact forecast and the residual is zero.
  */
 
 export const OUTCOMES = ['won', 'lost', 'withdrawn', 'declined', 'pending'];
@@ -37,26 +42,22 @@ export function reliability(records, bins = 5) {
   return out;
 }
 
-export function murphy(records) {
+export const MURPHY_BINS = 5;
+
+export function murphy(records, bins = MURPHY_BINS) {
   const rs = records.filter(r => decided(r) && r.pwin != null);
   if (!rs.length) return null;
   const base = rs.filter(r => r.outcome === 'won').length / rs.length;
   const uncertainty = base * (1 - base);
-  // Group by unique forecast value so the decomposition is exact (BS = REL − RES + UNC).
-  const groups = {};
-  for (const r of rs) {
-    const k = r.pwin.toFixed(6);
-    groups[k] ||= { n: 0, predicted: r.pwin, won: 0 };
-    groups[k].n++; groups[k].won += r.outcome === 'won' ? 1 : 0;
-  }
+  const binned = reliability(rs, bins).filter(b => b.n > 0);
   let rel = 0, res = 0;
-  for (const g of Object.values(groups)) {
-    const obs = g.won / g.n;
-    rel += g.n * Math.pow(g.predicted - obs, 2);
-    res += g.n * Math.pow(obs - base, 2);
+  for (const b of binned) {
+    rel += b.n * Math.pow(b.predicted - b.observed, 2);   // mean forecast vs observed frequency, per bin
+    res += b.n * Math.pow(b.observed - base, 2);          // observed frequency vs base rate, per bin
   }
   rel /= rs.length; res /= rs.length;
-  return { reliability: rel, resolution: res, uncertainty, brier: rel - res + uncertainty, baseRate: base, n: rs.length };
+  const bs = brier(rs);
+  return { reliability: rel, resolution: res, uncertainty, withinBin: bs - (rel - res + uncertainty), brier: bs, baseRate: base, n: rs.length, bins: binned.length };
 }
 
 export function hitRates(records, keyFn = r => r.route || 'all') {
@@ -93,9 +94,9 @@ export function criterionSeparation(records) {
   }).sort((a, b) => Math.abs(b.separation ?? 0) - Math.abs(a.separation ?? 0));
 }
 
-/** Verdict-vs-human agreement: how often the recorded human decision matched the tool's band. */
+/** Verdict-vs-human agreement: how often the recorded human decision matched the tool's band. INCOMPLETE is not a verdict, so it cannot be overridden. */
 export function overrideRate(records) {
-  const rs = records.filter(r => r.bandShown && r.decisionTaken);
+  const rs = records.filter(r => r.bandShown && r.bandShown !== 'INCOMPLETE' && r.decisionTaken);
   if (!rs.length) return null;
   const overrides = rs.filter(r => (r.bandShown === 'GO' || r.bandShown === 'APPROVAL') !== (r.decisionTaken === 'bid')).length;
   return { n: rs.length, overrides, rate: overrides / rs.length };

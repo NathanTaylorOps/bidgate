@@ -1,6 +1,8 @@
 /* Decision, Pipeline, Calibration views and the printable memo */
 import { brier, reliability, hitRates, criterionSeparation, murphy, overrideRate, OUTCOMES } from '../engine/calibration.js';
 import { PRESETS } from '../data/presets.js';
+import { GROUPS as GROUPS_FOR_MEMO } from '../data/criteria.js';
+import { MITIGATIONS as MITIGATIONS_FOR_MEMO } from '../data/dealkillers.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -22,15 +24,16 @@ const DEVILS = [
 
 /* ═══════════════════════════ DECISION ═══════════════════════════ */
 export function renderDecision(main, d, X) {
-  const { state, esc, money, pct, num, commit, C, MITIGATIONS, BANDS } = X;
+  const { state, esc, money, pct, num, commit, C, MITIGATIONS, isVerdict } = X;
   const b = state.bid, dec = b.decision;
   const sens = X.sensitivity(d.p, b.scores, b.dealKillers);
-  const rob = X.robustness(d.p, b.scores, b.dealKillers, { samples: 400 });
+  const rob = X.robustness(d.p, b.scores, b.dealKillers, { samples: 400, seed: b.id });   // seeded by bid id: same bid, same figure, every render
   const weak = X.weakestLinks(d.result, b.scores, 6);
   const band = d.band;
+  const verdict = isVerdict(band);
   const flipsUp = sens.flips.filter(f => f.direction === 'up').slice(0, 3);
   const flipsDown = sens.flips.filter(f => f.direction === 'down').slice(0, 3);
-  const isGo = band && (band.id === 'GO' || band.id === 'APPROVAL');
+  const isGo = verdict && (band.id === 'GO' || band.id === 'APPROVAL');
   const devil = DEVILS.filter((_, i) => (i + (b.name?.length || 0)) % 3 === 0).slice(0, 3);
 
   main.innerHTML = `
@@ -39,17 +42,19 @@ export function renderDecision(main, d, X) {
     <div class="title">${band ? `<span aria-hidden="true">${band.icon}</span>${band.label}` : 'Not yet scored'}</div>
     <div class="why">Attractiveness ${num(d.result.attractiveness, 0)} · Winnability ${d.result.winnability == null ? '–' : num(d.result.winnability, 0)} · P(win) ${pct(d.pw.p)} · EV ${b.value ? money(d.ev.ev) : '–'} · ${d.result.scoredCount}/${d.result.totalCount} scored</div>
     ${d.allGates.length ? `<div class="gatelist">${d.allGates.map(g => `<div class="g"><span aria-hidden="true">⛔</span><span>${esc(g.name)}${g.detail ? ` — ${esc(g.detail)}` : ''}</span></div>`).join('')}</div>` : ''}
-    ${d.result.floorHits.length ? `<div class="small" style="margin-top:6px;color:var(--warn)">▲ Weakest-link floor: ${d.result.floorHits.map(f => esc(f.name)).join('; ')} ≤ 2 → capped at CONDITIONAL.</div>` : ''}
+    ${band && band.id === 'INCOMPLETE' ? `<div class="small" style="margin-top:6px">◌ ${esc(X.incompleteWhy(d.result))}</div>` : ''}
+    ${verdict && d.result.floorHits.length ? `<div class="small" style="margin-top:6px;color:var(--warn)">▲ Weakest-link floor: ${d.result.floorHits.map(f => esc(f.name)).join('; ')} ≤ 2 → capped at CONDITIONAL.</div>` : ''}
   </div>
 
   <div class="cols-2">
     <div class="card" style="margin:0">
       <h2>What would flip this</h2>
-      ${band && band.id !== 'GATED' && d.result.attractiveness != null ? `
+      ${verdict && band.id !== 'GATED' && d.result.attractiveness != null ? `
         ${flipsUp.length ? `<div class="small" style="margin-bottom:6px"><b>Up:</b></div><div class="list">${flipsUp.map(f => `<div class="item"><span>${esc(f.name)} ${f.from} → ${f.to}</span><span class="pill ${f.band.tone}">${f.band.label}</span></div>`).join('')}</div>` : '<p class="small">No single criterion change moves this up a band.</p>'}
         ${flipsDown.length ? `<div class="small" style="margin:10px 0 6px"><b>Down:</b></div><div class="list">${flipsDown.map(f => `<div class="item"><span>${esc(f.name)} ${f.from} → ${f.to}</span><span class="pill ${f.band.tone}">${f.band.label}</span></div>`).join('')}</div>` : '<p class="small">No single criterion change moves this down a band.</p>'}
-        <div class="callout small" style="margin-top:10px">Weight robustness: verdict holds in <b>${pct(rob.agreement, 0)}</b> of 400 random weightings within ±20 % of the preset. ${rob.agreement < 0.7 ? 'Fragile — the verdict depends on how you weight, not just how you scored.' : 'Stable.'}</div>`
-      : band && band.id === 'GATED' ? '<p class="small">Gated. Clear the gate(s) first; the scored verdict underneath is shown in the side panel.</p>' : '<p class="small">Score the criteria first.</p>'}
+        <div class="callout small" style="margin-top:10px">Weight robustness: verdict holds in <b>${pct(rob.agreement, 0)}</b> of 400 seeded random weightings within ±20 % of the preset. ${rob.agreement < 0.7 ? 'Fragile — the verdict depends on how you weight, not just how you scored.' : 'Stable.'}</div>`
+      : band && band.id === 'GATED' ? '<p class="small">Gated. Clear the gate(s) first; the scored verdict underneath is shown in the side panel.</p>'
+      : band && band.id === 'INCOMPLETE' ? `<p class="small">No verdict yet — ${esc(X.incompleteWhy(d.result))}</p>` : '<p class="small">Score the criteria first.</p>'}
     </div>
     <div class="card" style="margin:0">
       <h2>Weakest links &amp; mitigations</h2>
@@ -77,12 +82,13 @@ export function renderDecision(main, d, X) {
       <div class="field"><label for="decBy">Decided by</label><input id="decBy" value="${esc(dec.decidedBy)}" placeholder="Names"></div>
       <div class="field"><label for="decAt">Date</label><input id="decAt" type="date" value="${esc(dec.decidedAt)}"></div>
     </div>
-    ${dec.decisionTaken && band && ((dec.decisionTaken.startsWith('bid') || dec.decisionTaken === 'courtesy') !== isGo) ? `<div class="field" style="margin-top:10px"><label for="decOverride" style="color:var(--warn)">Override reason (required — the decision disagrees with the tool)</label><textarea id="decOverride" placeholder="Why are you overriding? This is logged and shows up in Calibration as your override rate.">${esc(dec.overrideReason)}</textarea></div>` : ''}
+    ${dec.decisionTaken && verdict && ((dec.decisionTaken.startsWith('bid') || dec.decisionTaken === 'courtesy') !== isGo) ? `<div class="field" style="margin-top:10px"><label for="decOverride" style="color:var(--warn)">Override reason (required — the decision disagrees with the tool)</label><textarea id="decOverride" placeholder="Why are you overriding? This is logged and shows up in Calibration as your override rate.">${esc(dec.overrideReason)}</textarea></div>` : ''}
+    ${dec.decisionTaken && band && band.id === 'INCOMPLETE' ? `<div class="callout warn small" style="margin-top:10px">Recording a decision on an INCOMPLETE scorecard: the memo and pipeline will show no verdict to compare it with.</div>` : ''}
     <div class="row" style="margin-top:12px;gap:6px">
-      <button class="btn primary" id="decSave">Save to pipeline</button>
-      <button class="btn" id="decPrint">Print decision memo</button>
+      <button type="button" class="btn primary" id="decSave">Save to pipeline</button>
+      <button type="button" class="btn" id="decPrint">Print decision memo</button>
     </div>
-    <p class="small" style="margin-top:8px">The memo prints one page: verdict, gates, scorecard with anchors met, economics, pre-mortem, decision and signatures.</p>
+    <p class="small" style="margin-top:8px">The memo prints on one page: verdict, gates, economics and cash, the scorecard by group, evidence notes, weakest links, pre-mortem, decision and signatures.</p>
   </div>`;
 
   if (sens.rows.length) C.tornado('tornado', sens.rows.slice(0, 22), d.result.attractiveness);
@@ -110,11 +116,11 @@ export function renderPipeline(main, d, X) {
     <p class="small" style="margin-top:6px">GE/McKinsey-style 2×2. The score conflates two questions — should we want it, and can we win it — so they are plotted separately. Pursue top-right; decline bottom-left; top-left is where relationship-building belongs, not estimating hours.</p>` : '<div class="empty">No saved bids. Score a bid and press Save, or load the samples from Settings.</div>'}
   </div>
   <div class="card">
-    <h2>Saved bids <span class="row" style="gap:6px"><button class="btn sm" id="plCsv">Export CSV</button><button class="btn sm" id="plCompare" ${saved.length < 2 ? 'disabled' : ''}>Compare selected</button></span></h2>
+    <h2>Saved bids <span class="row" style="gap:6px"><button type="button" class="btn sm" id="plCsv">Export CSV</button><button type="button" class="btn sm" id="plCompare" ${saved.length < 2 ? 'disabled' : ''}>Compare selected</button></span></h2>
     ${saved.length ? `<div class="tbl-wrap"><table><thead><tr><th></th><th>Bid</th><th>Preset</th><th class="num">Value</th><th class="num">Attr.</th><th class="num">Win.</th><th class="num">P(win)</th><th class="num">EV</th><th>Verdict</th><th>Outcome</th><th class="num">Actual margin %</th><th></th></tr></thead><tbody>
       ${saved.map(s => `<tr>
         <td><input type="checkbox" data-sel="${s.id}" aria-label="select ${esc(s.bid.name)}"></td>
-        <td><b>${esc(s.bid.name || 'Unnamed')}</b>${s.sample ? ' <span class="pill neutral">sample</span>' : ''}<div class="small muted">${esc(s.bid.client || '')} · ${new Date(s.savedAt).toLocaleDateString()}</div></td>
+        <td><b>${esc(s.bid.name || 'Unnamed')}</b>${s.sample ? ' <span class="pill neutral">sample</span>' : ''}${s.outcome && s.outcome !== 'pending' ? ' <span class="pill neutral" title="Outcome recorded: the forecast fields on this row no longer change when the bid is re-saved">forecast frozen</span>' : ''}<div class="small muted">${esc(s.bid.client || '')} · ${new Date(s.savedAt).toLocaleDateString()}</div></td>
         <td class="small">${esc(PRESETS[s.presetId]?.label || s.presetId)}</td>
         <td class="num">${s.value ? money(s.value) : '–'}</td>
         <td class="num">${num(s.attractiveness, 0)}</td>
@@ -122,9 +128,9 @@ export function renderPipeline(main, d, X) {
         <td class="num">${pct(s.pwin)}</td>
         <td class="num">${s.value ? money(s.ev) : '–'}</td>
         <td><span class="pill ${tone(s.band)}">${bandOf(s.band)?.label || '–'}</span></td>
-        <td><select data-outcome="${s.id}" class="btn sm">${OUTCOMES.map(o => `<option value="${o}" ${s.outcome === o ? 'selected' : ''}>${o}</option>`).join('')}</select></td>
-        <td class="num"><input type="number" step="0.1" data-margin="${s.id}" value="${s.actualMargin ?? ''}" style="width:64px;text-align:right" class="mono" ${s.outcome === 'won' ? '' : 'disabled'}></td>
-        <td><div class="row" style="gap:2px;flex-wrap:nowrap"><button class="btn ghost sm" data-load="${s.id}" title="Load into editor">↩</button><button class="btn ghost sm" data-del="${s.id}" title="Delete">✕</button></div></td>
+        <td><select data-outcome="${s.id}" class="btn sm" aria-label="Outcome for ${esc(s.bid.name || 'Unnamed')}">${OUTCOMES.map(o => `<option value="${o}" ${s.outcome === o ? 'selected' : ''}>${o}</option>`).join('')}</select></td>
+        <td class="num"><input type="number" step="0.1" data-margin="${s.id}" value="${s.actualMargin ?? ''}" style="width:64px;text-align:right" class="mono" ${s.outcome === 'won' ? '' : 'disabled'} aria-label="Actual margin for ${esc(s.bid.name || 'Unnamed')}"></td>
+        <td><div class="row" style="gap:2px;flex-wrap:nowrap"><button type="button" class="btn ghost sm" data-load="${s.id}" title="Load into editor" aria-label="Load ${esc(s.bid.name || 'Unnamed')} into editor">↩</button><button type="button" class="btn ghost sm" data-del="${s.id}" title="Delete" aria-label="Delete ${esc(s.bid.name || 'Unnamed')}">✕</button></div></td>
       </tr>`).join('')}
     </tbody></table></div>` : ''}
   </div>
@@ -186,13 +192,13 @@ export function renderCalibration(main, d, X) {
       <div class="kpi"><div class="v">${ovr ? pct(ovr.rate, 0) : '–'}</div><div class="l">Human override rate</div></div>
       <div class="kpi"><div class="v" style="color:${fade == null ? '' : fade < -2 ? 'var(--bad)' : 'var(--good)'}">${fade == null ? '–' : (fade > 0 ? '+' : '') + fade.toFixed(1) + ' pts'}</div><div class="l">Avg margin fade (actual − bid)</div></div>
     </div>
-    ${decided.length < 10 ? `<div class="callout small" style="margin-top:10px">You have ${decided.length} decided outcome${decided.length === 1 ? '' : 's'}. Record won / lost on the Pipeline tab as bids resolve. Below ~30 outcomes, treat everything here as a sketch; below 60, do not fit a model — look at the separation table and reason.</div>` : ''}
+    ${decided.length < 60 ? `<div class="callout small" style="margin-top:10px">You have ${decided.length} decided outcome${decided.length === 1 ? '' : 's'}. Record won / lost on the Pipeline tab as bids resolve. Once an outcome is recorded the forecast on that row is frozen, so this page always compares what was predicted with what happened. Below 60 outcomes, do not fit a model — look at the separation table and reason.</div>` : ''}
   </div>
   <div class="cols-2">
     <div class="card" style="margin:0">
       <h2>Reliability diagram <span class="pill neutral">5 bins</span></h2>
       ${decided.length ? '<div class="chart" style="height:240px"><canvas id="relChart" aria-label="Reliability diagram"></canvas></div>' : '<div class="empty">Needs decided outcomes.</div>'}
-      ${mur ? `<div class="small muted" style="margin-top:6px">Murphy decomposition: reliability ${mur.reliability.toFixed(3)} − resolution ${mur.resolution.toFixed(3)} + uncertainty ${mur.uncertainty.toFixed(3)} = ${mur.brier.toFixed(3)}. Points above the diagonal = under-confident; below = over-confident.</div>` : ''}
+      ${mur ? `<div class="small muted" style="margin-top:6px">Murphy decomposition on these ${mur.bins} bin${mur.bins === 1 ? '' : 's'}: reliability ${mur.reliability.toFixed(3)} − resolution ${mur.resolution.toFixed(3)} + uncertainty ${mur.uncertainty.toFixed(3)} + within-bin ${mur.withinBin.toFixed(3)} = Brier ${mur.brier.toFixed(3)}. Points above the diagonal = under-confident; below = over-confident.</div>` : ''}
     </div>
     <div class="card" style="margin:0">
       <h2>Hit rate by route &amp; by verdict</h2>
@@ -214,40 +220,60 @@ export function renderCalibration(main, d, X) {
 }
 
 /* ═══════════════════════════ PRINT MEMO ═══════════════════════════ */
+/**
+ * One page (A4 or Letter): verdict, gates, economics & cash, weakest links, scorecard by group, evidence notes,
+ * pre-mortem, decision and signatures. No charts — nothing that fails in greyscale or offline. Long evidence
+ * notes are cut at NOTE_CHARS so the page count cannot creep; the full note is in the app.
+ */
+const NOTE_CHARS = 150;
 export function renderMemo(d, state) {
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const b = state.bid, dec = b.decision;
+  const b = state.bid, dec = b.decision, r = d.result;
   const money = n => n == null ? '–' : new Intl.NumberFormat(d.p.locale.locale, { style: 'currency', currency: d.p.locale.currency, maximumFractionDigits: 0 }).format(n);
   const pct = x => x == null ? '–' : (x * 100).toFixed(0) + ' %';
+  const cut = s => (s.length > NOTE_CHARS ? s.slice(0, NOTE_CHARS - 1).trimEnd() + '…' : s);
   const band = d.band;
+  const verdict = band && band.id !== 'INCOMPLETE';
+  const groups = GROUPS_FOR_MEMO.filter(g => r.groupStats[g.id].count > 0);
+  const weak = r.criteria.filter(c => b.scores[c.id] != null && b.scores[c.id] <= 2).sort((x, y) => b.scores[x.id] - b.scores[y.id]).slice(0, 5);
+  const notes = r.criteria.filter(c => b.notes[c.id] && b.notes[c.id].trim()).slice(0, 8);
+  const decisionLabel = { bid: 'Bid', bid_conditional: 'Bid with conditions', courtesy: 'Courtesy bid', decline: 'Decline', defer: 'Defer — need information' }[dec.decisionTaken] || '—';
   return `
-  <h1>Go / No-Go Decision Memo</h1>
+  <div class="mhead"><h1>Go / No-Go Decision Memo</h1><div class="mprep">${esc(d.p.label)} · prepared ${new Date().toLocaleDateString(d.p.locale.locale)}</div></div>
   <div class="meta">
-    <div><b>Project:</b> ${esc(b.name || 'Unnamed')}</div><div><b>GC / source:</b> ${esc(b.client || '–')}</div>
-    <div><b>Value:</b> ${money(b.value)} (${d.p.locale.currency})</div><div><b>Route:</b> ${esc(d.route.label)} · ${b.competitors ?? d.route.typicalBidders} competitors</div>
-    <div><b>Preset:</b> ${esc(d.p.label)}</div><div><b>Prepared:</b> ${new Date().toLocaleDateString(d.p.locale.locale)}</div>
+    <div><b>Project</b> ${esc(b.name || 'Unnamed')}</div><div><b>GC / source</b> ${esc(b.client || '–')}</div>
+    <div><b>Value</b> ${money(b.value)} · ${b.durationMonths || '–'} mo</div><div><b>Route</b> ${esc(d.route.label)} · ${b.competitors ?? d.route.typicalBidders} competitors</div>
   </div>
-  <div class="band">${band ? band.icon + ' ' + band.label : 'NOT SCORED'} — attractiveness ${d.result.attractiveness == null ? '–' : d.result.attractiveness.toFixed(0)}/100 · P(win) ${pct(d.pw.p)} · EV ${money(d.ev.ev)}</div>
-  ${d.allGates.length ? `<h2>Gates triggered</h2><ul>${d.allGates.map(g => `<li>${esc(g.name)}${g.detail ? ' — ' + esc(g.detail) : ''}</li>`).join('')}</ul>` : ''}
-  ${d.result.floorHits.length ? `<p><b>Weakest-link floor:</b> ${d.result.floorHits.map(f => esc(f.name)).join('; ')} scored ≤ 2 → capped at CONDITIONAL.</p>` : ''}
-  <h2>Economics</h2>
-  <table><tbody>
-    <tr><td>Gross profit at ${b.econ.marginMode} % (range ${b.econ.marginLow}–${b.econ.marginHigh} %)</td><td class="num">${money(d.ev.grossProfit)}</td></tr>
-    ${d.ev.levies.map(l => `<tr><td>− ${esc(l.label)}</td><td class="num">${money(-l.amount)}</td></tr>`).join('')}
-    <tr><td>P(win): route ${pct(d.route.baseWin)} → history ${pct(d.pw.p0)} → competitors ${pct(d.pw.p1)} → position</td><td class="num">${pct(d.pw.p)}</td></tr>
-    <tr><td>Cost to bid</td><td class="num">${money(d.ev.bidCost)}</td></tr>
-    <tr><td>Expected value · risk-adjusted</td><td class="num">${money(d.ev.ev)} · ${money(d.ev.riskAdjEv)}</td></tr>
-    <tr><td>Break-even P(win) · pursuit cost / gross profit</td><td class="num">${pct(d.ev.breakEvenP)} · ${pct(d.ev.pursuitRatio)}</td></tr>
-    ${d.thisPeak ? `<tr><td>Peak negative cash (this job) · portfolio peak after award</td><td class="num">${money(d.thisPeak.peak)} · ${money(d.portAfter.peak)}${d.facility ? ` of ${money(d.facility)}` : ''}</td></tr>` : ''}
-  </table>
-  <h2>Scorecard</h2>
-  <table><thead><tr><th>Criterion</th><th>Score</th><th>Anchor met / note</th></tr></thead><tbody>
-    ${d.result.criteria.filter(c => b.scores[c.id] != null).map(c => { const s = b.scores[c.id]; const anchor = c.anchors[s] || (s === 2 ? 'between 1 and 3' : 'between 3 and 5'); return `<tr><td>${esc(c.name)}${c.gate ? ' <small>[gate]</small>' : ''}</td><td class="num">${s}</td><td><small>${esc(b.notes[c.id] || anchor)}</small></td></tr>`; }).join('')}
-  </tbody></table>
-  ${dec.premortem.some(x => x) ? `<h2>Pre-mortem — why this lost money</h2><ol>${dec.premortem.filter(x => x).map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : ''}
+  <div class="band ${band ? band.tone : ''}">${band ? band.icon + ' ' + band.label : 'NOT SCORED'} <span class="bandkpi">attractiveness ${r.attractiveness == null ? '–' : r.attractiveness.toFixed(0)}/100 · winnability ${r.winnability == null ? '–' : r.winnability.toFixed(0)}/100 · P(win) ${pct(d.pw.p)} · EV ${money(d.ev.ev)} · ${r.scoredCount}/${r.totalCount} scored</span></div>
+  ${band && band.id === 'INCOMPLETE' ? `<p class="note">No verdict: ${(r.weightedCoverage * 100).toFixed(0)} % of the weighted card scored — ${r.moreNeeded} more criteri${r.moreNeeded === 1 ? 'on' : 'a'} needed${r.unscoredGates.length ? ` (gates unscored: ${r.unscoredGates.map(g => esc(g.name)).join('; ')})` : ''}.</p>` : ''}
+  ${d.allGates.length ? `<p class="gates"><b>Gates triggered:</b> ${d.allGates.map(g => esc(g.name) + (g.detail ? ' (' + esc(g.detail) + ')' : '')).join(' · ')}</p>` : ''}
+  ${verdict && r.floorHits.length ? `<p class="note"><b>Weakest-link floor:</b> ${r.floorHits.map(f => esc(f.name)).join('; ')} scored ≤ 2 → capped at CONDITIONAL.</p>` : ''}
+  <div class="two">
+    <div>
+      <h2>Economics &amp; cash</h2>
+      <table><tbody>
+        <tr><td>Gross profit at ${b.econ.marginMode} % (${b.econ.marginLow}–${b.econ.marginHigh} %)</td><td class="num">${money(d.ev.grossProfit)}</td></tr>
+        ${d.ev.levies.map(l => `<tr><td>− ${esc(l.label)}</td><td class="num">${money(-l.amount)}</td></tr>`).join('')}
+        <tr><td>P(win): route ${pct(d.route.baseWin)} → record ${pct(d.pw.p0)} → competitors ${pct(d.pw.p1)} → position</td><td class="num">${pct(d.pw.p)}</td></tr>
+        <tr><td>Cost to bid${d.ev.hours ? ` (${Math.round(d.ev.hours)} h)` : ''}</td><td class="num">${money(d.ev.bidCost)}</td></tr>
+        <tr><td>Expected value · risk-adjusted</td><td class="num">${money(d.ev.ev)} · ${money(d.ev.riskAdjEv)}</td></tr>
+        <tr><td>Break-even P(win) · pursuit cost / gross profit</td><td class="num">${pct(d.ev.breakEvenP)} · ${pct(d.ev.pursuitRatio)}</td></tr>
+        ${d.thisPeak ? `<tr><td>Peak retention / AR exposure: this job · portfolio after award</td><td class="num">${money(d.thisPeak.peak)} · ${money(d.portAfter.peak)}${d.facility ? ` of ${money(d.facility)}` : ''}</td></tr>` : ''}
+      </tbody></table>
+    </div>
+    <div>
+      <h2>Weakest links</h2>
+      ${weak.length ? `<ul class="tight">${weak.map(c => `<li><b>${esc(c.name)}</b> = ${b.scores[c.id]}${c.gate ? ' [gate]' : c.floor ? ' [floor]' : ''} — ${esc(cut(MITIGATIONS_FOR_MEMO[c.id] || ''))}</li>`).join('')}</ul>` : '<p class="note">Nothing scored ≤ 2.</p>'}
+      ${dec.premortem.some(x => x) ? `<h2>Pre-mortem — why this lost money</h2><ol class="tight">${dec.premortem.filter(x => x).map(x => `<li>${esc(cut(x))}</li>`).join('')}</ol>` : ''}
+    </div>
+  </div>
+  <h2>Scorecard <span class="h2note">1–5 against the anchors · [G] gate at 1 · [F] floor at 2 · w = group weight</span></h2>
+  <div class="scoregrid">
+    ${groups.map(g => { const gs = r.groupStats[g.id]; const cs = r.criteria.filter(c => c.group === g.id); return `<div class="sg"><div class="sgh"><span>${esc(g.label)}</span><span>${gs.pct == null ? '–' : gs.pct.toFixed(0)}${g.axis === 'attractiveness' ? ` · w ${d.p.weights[g.id]} %` : ' · winnability'}</span></div>${cs.map(c => { const s = b.scores[c.id]; return `<div class="sc${s == null ? ' un' : s <= 2 ? ' lo' : ''}"><span>${esc(c.name)}${c.gate ? ' [G]' : ''}${c.floor ? ' [F]' : ''}</span><span class="v">${s ?? '·'}</span></div>`; }).join('')}</div>`; }).join('')}
+  </div>
+  ${notes.length ? `<h2>Evidence notes</h2><ul class="tight notes">${notes.map(c => `<li><b>${esc(c.name)}</b> (${b.scores[c.id] ?? '–'}): ${esc(cut(b.notes[c.id]))}</li>`).join('')}</ul>` : ''}
   <h2>Decision</h2>
-  <p><b>Decision taken:</b> ${esc(dec.decisionTaken || '—')} &nbsp; <b>By:</b> ${esc(dec.decidedBy || '—')} &nbsp; <b>Date:</b> ${esc(dec.decidedAt || '—')}</p>
-  ${dec.overrideReason ? `<p><b>Override reason:</b> ${esc(dec.overrideReason)}</p>` : ''}
+  <p><b>Decision taken:</b> ${esc(decisionLabel)} &nbsp;·&nbsp; <b>By:</b> ${esc(dec.decidedBy || '—')} &nbsp;·&nbsp; <b>Date:</b> ${esc(dec.decidedAt || '—')}${dec.overrideReason ? ` &nbsp;·&nbsp; <b>Override reason:</b> ${esc(cut(dec.overrideReason))}` : ''}</p>
   <div class="sig"><div>Estimating</div><div>Operations</div><div>Owner / Director</div></div>
-  <p style="margin-top:12pt;font-size:8.5pt;color:#555">Generated by BidGate. Gates are non-compensatory. Weights: ${Object.entries(d.p.weights).filter(([k, v]) => k !== 'compete' && v > 0).map(([k, v]) => `${k} ${v}`).join(', ')}. All thresholds are configurable defaults; see METHODOLOGY.md.</p>`;
+  <p class="foot">Generated by BidGate. Gates are non-compensatory; a verdict needs every gate criterion scored and ≥ ${(r.coverageThreshold * 100).toFixed(0)} % of the weighted card. Weights: ${Object.entries(d.p.weights).filter(([k, v]) => k !== 'compete' && v > 0).map(([k, v]) => `${k} ${v}`).join(', ')}. All thresholds are configurable, dated defaults — see METHODOLOGY.md.</p>`;
 }

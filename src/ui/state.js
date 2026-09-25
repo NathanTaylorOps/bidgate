@@ -3,12 +3,14 @@
  * Schema-versioned. Nothing leaves the browser.
  */
 import { PRESETS, ROUTES, DEFAULT_PRESET_ID } from '../data/presets.js';
-import { CRITERIA_BY_ID } from '../data/criteria.js';
+import { CRITERIA_BY_ID, GROUPS } from '../data/criteria.js';
 
-// v3: rescoped from the vertically-integrated-custom-builder / AU-regulatory domain to a US flooring / tile /
-// specialty-surface subcontractor domain. Criteria ids, group ids and preset ids all changed — see CHANGELOG.md.
-export const SCHEMA_VERSION = 3;
-const KEY = 'bidgate.v3';
+const GROUP_IDS = new Set(GROUPS.map(g => g.id));
+
+// Bump SCHEMA_VERSION (and the storage key) whenever the saved-bid shape changes incompatibly; migrate() below
+// brings anything older, or anything hand-edited, up to the current shape conservatively.
+export const SCHEMA_VERSION = 1;
+const KEY = 'bidgate.v1';
 
 export function newBid(presetId = DEFAULT_PRESET_ID) {
   const preset = PRESETS[presetId];
@@ -28,8 +30,10 @@ export function newBid(presetId = DEFAULT_PRESET_ID) {
       payLagMonths: 1.5, retention: 0.10, frontLoad: 0,
       cash: null, creditLine: null, workingCapital: null, backlogValue: null,
       estimatorLoadAfter: null, crewLoadAfter: null,
-      liveJobs: [],
+      liveJobs: [],           // [{ value, durationMonths, startMonth (≤ 0), marginPct }] — marginPct optional, defaults to this bid's most-likely margin
     },
+    // weightsOverride: { groupId: pct } — set only when a bid arrives by share link carrying the sender's weights.
+    // Applies to this bid alone; Settings weights are never changed by a share link.
     decision: { premortem: ['', '', ''], decisionTaken: '', overrideReason: '', decidedBy: '', decidedAt: '' },
     createdAt: new Date().toISOString(),
   };
@@ -68,11 +72,20 @@ function pruneScores(obj) {
   return out;
 }
 
+/** Keep only weight entries for real attractiveness groups with a finite non-negative number. */
+export function pruneWeights(obj) {
+  if (!obj || typeof obj !== 'object') return null;
+  const out = {};
+  for (const [k, v] of Object.entries(obj)) if (GROUP_IDS.has(k) && k !== 'compete' && Number.isFinite(v) && v >= 0) out[k] = v;
+  return Object.keys(out).length ? out : null;
+}
+
 /**
  * Bring any bid-shaped object (live bid, saved pipeline record, share-link payload) up to the current shape:
  * defaults merged under it (so a record saved with `capacity: null` or no `decision` cannot crash compute()),
  * nested econ/capacity/decision merged one level deep, stale criterion ids dropped, route validated against
- * ROUTES (falls back to the preset default) and dealKillers coerced to an array of ids.
+ * ROUTES (falls back to the preset default), dealKillers coerced to an array of ids, live jobs coerced to
+ * plain numeric records and any bid-level weight override pruned to real groups.
  */
 export function normaliseBid(bid, presetId = DEFAULT_PRESET_ID) {
   const pid = PRESETS[presetId] ? presetId : DEFAULT_PRESET_ID;
@@ -84,62 +97,43 @@ export function normaliseBid(bid, presetId = DEFAULT_PRESET_ID) {
     capacity: { ...def.capacity, ...(src.capacity && typeof src.capacity === 'object' ? src.capacity : {}) },
     decision: { ...def.decision, ...(src.decision && typeof src.decision === 'object' ? src.decision : {}) },
   };
+  // Drop anything that isn't part of the current bid shape — a legacy field name from an older schema
+  // version, or hand-edited JSON — rather than carrying it across silently.
+  const allowedKeys = new Set([...Object.keys(def), 'weightsOverride']);
+  for (const k of Object.keys(out)) { if (!allowedKeys.has(k)) delete out[k]; }
   out.scores = pruneScores(src.scores);
   out.notes = pruneScores(src.notes);
   out.dealKillers = Array.isArray(src.dealKillers) ? src.dealKillers.filter(x => typeof x === 'string') : [];
   out.route = ROUTES.some(r => r.id === out.route) ? out.route : PRESETS[pid].economics.defaultRoute;
-  if (!Array.isArray(out.capacity.liveJobs)) out.capacity.liveJobs = [];
+  const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+  out.capacity.liveJobs = (Array.isArray(out.capacity.liveJobs) ? out.capacity.liveJobs : [])
+    .filter(j => j && typeof j === 'object')
+    .map(j => ({ value: num(j.value), durationMonths: num(j.durationMonths) ?? 4, startMonth: num(j.startMonth) ?? 0, ...(num(j.marginPct) != null ? { marginPct: j.marginPct } : {}) }));
   if (!Array.isArray(out.decision.premortem)) out.decision.premortem = ['', '', ''];
+  const w = pruneWeights(src.weightsOverride);
+  if (w) out.weightsOverride = w; else delete out.weightsOverride;
   return out;
 }
 
+/**
+ * Bring a stored/imported state up to the current shape. Every field is validated rather than trusted: unknown
+ * presets fall back to the default, the live bid and every saved record go through normaliseBid() (so a record
+ * saved with `capacity: null` or a missing decision block cannot crash compute()), unknown criterion ids are
+ * dropped rather than carried across incorrectly, and saved records from an unrecognised preset are dropped.
+ */
 export function migrate(s) {
   if (!s || typeof s !== 'object') return null;
-  if (!s.version) s.version = 1;
-  if (s.version < 3) {
-    // v1/v2 had different criteria, group and preset ids throughout (legacy field names). None of it maps
-    // cleanly onto the current flooring/tile subcontractor domain, so a legacy save is migrated conservatively:
-    // bid identity/economics fields that still exist are kept, everything id-dependent is dropped rather
-    // than carried across incorrectly, and saved pipeline entries from an unrecognised preset are dropped.
-    const d = defaultState();
-    if (s.bid && typeof s.bid === 'object') {
-      const b = s.bid;
-      d.bid = {
-        ...d.bid,
-        name: b.name || '', client: b.client || '', location: b.location || '',
-        value: typeof b.value === 'number' ? b.value : null,
-        durationMonths: typeof b.durationMonths === 'number' ? b.durationMonths : null,
-        competitors: typeof b.competitors === 'number' ? b.competitors : null,
-        econ: { ...d.bid.econ, ...(b.econ ? {
-          marginLow: b.econ.marginLow ?? d.bid.econ.marginLow, marginMode: b.econ.marginMode ?? d.bid.econ.marginMode, marginHigh: b.econ.marginHigh ?? d.bid.econ.marginHigh,
-          bidHours: b.econ.bidHours ?? null, loadedRate: b.econ.loadedRate ?? d.bid.econ.loadedRate, externalBidCost: b.econ.externalBidCost ?? 0,
-          wins: b.econ.wins ?? 0, bids: b.econ.bids ?? 0,
-        } : {}) },
-      };
-      // scores/notes: only meaningful if the ids happen to overlap (they won't for a true legacy save,
-      // but this keeps a save from THIS domain's earlier schema versions intact).
-      d.bid.scores = pruneScores(b.scores);
-      d.bid.notes = pruneScores(b.notes);
-    }
-    if (Array.isArray(s.saved)) {
-      d.saved = s.saved
-        .filter(rec => rec && PRESETS[rec.presetId])
-        .map(rec => ({ ...rec, bid: normaliseBid(rec.bid, rec.presetId) }));
-    }
-    return d;
-  }
-  // forward-compat defaults
-  if (!PRESETS[s.presetId]) s.presetId = DEFAULT_PRESET_ID;
-  s.bid = normaliseBid(s.bid, s.presetId);
-  s.saved = Array.isArray(s.saved) ? s.saved : [];
-  // Saved records get the same defaults-merge as the live bid so "Load into editor" on a record saved with
-  // capacity: null or a missing decision block cannot crash compute().
-  s.saved = s.saved
-    .filter(rec => rec && PRESETS[rec.presetId])
+  const d = defaultState();
+  const out = { ...d, ...s, version: SCHEMA_VERSION };
+  if (!PRESETS[out.presetId]) out.presetId = DEFAULT_PRESET_ID;
+  out.bid = normaliseBid(out.bid, out.presetId);
+  out.saved = (Array.isArray(out.saved) ? out.saved : [])
+    .filter(rec => rec && typeof rec === 'object' && PRESETS[rec.presetId])
     .map(rec => ({ ...rec, bid: normaliseBid(rec.bid, rec.presetId) }));
-  s.weightsOverride ||= {};
-  s.mode ||= 'simple';
-  return s;
+  out.weightsOverride = out.weightsOverride && typeof out.weightsOverride === 'object' ? out.weightsOverride : {};
+  for (const k of Object.keys(out.weightsOverride)) { const w = PRESETS[k] ? pruneWeights(out.weightsOverride[k]) : null; if (w) out.weightsOverride[k] = w; else delete out.weightsOverride[k]; }
+  out.mode = out.mode === 'expert' ? 'expert' : 'simple';
+  return out;
 }
 
 export function exportJSON(state) {
@@ -152,16 +146,24 @@ export function importJSON(text) {
   return migrate(o.state);
 }
 
-/* ── URL hash sharing (current bid only, base64url-encoded UTF-8 JSON — no compression) ── */
+/* ── URL hash sharing (current bid only, base64url-encoded UTF-8 JSON — no compression) ──
+ * The payload carries the sender's effective weights for the bid's preset as `weights` (Settings override merged
+ * with any bid-level override). The recipient applies them to that one bid (bid.weightsOverride), never to their
+ * own Settings. */
 export function encodeShare(state) {
-  const payload = { v: SCHEMA_VERSION, presetId: state.presetId, bid: state.bid, weightsOverride: state.weightsOverride };
+  const p = PRESETS[state.presetId] || PRESETS[DEFAULT_PRESET_ID];
+  const weights = pruneWeights({ ...(state.weightsOverride?.[p.id] || {}), ...(state.bid?.weightsOverride || {}) });
+  const payload = { v: SCHEMA_VERSION, presetId: state.presetId, bid: state.bid, ...(weights ? { weights } : {}) };
   return toBase64Url(JSON.stringify(payload));
 }
 export function decodeShare(hash) {
   const json = fromBase64Url(hash);
   const o = JSON.parse(json);
-  if (!o || !o.bid) throw new Error('bad share');
-  return o;
+  if (!o || !o.bid || typeof o.bid !== 'object') throw new Error('bad share');
+  const presetId = PRESETS[o.presetId] ? o.presetId : DEFAULT_PRESET_ID;
+  const weights = pruneWeights(o.weights) || pruneWeights(o.weightsOverride?.[presetId]) || null;
+  const bid = normaliseBid({ ...o.bid, ...(weights ? { weightsOverride: weights } : {}) }, presetId);
+  return { v: o.v, presetId, bid, weights };
 }
 
 /* base64url (RFC 4648 §5, unpadded) of the UTF-8 bytes. No dependency on btoa/atob so it round-trips non-Latin-1 text. */

@@ -5,11 +5,14 @@
  *          p0 = (wins + α·μ) / (bids + α)   where μ = route default (or firm overall win rate), α = 10 pseudo-bids.
  *          With no history, p0 = μ.
  *
- *  Step 2  Competitor adjustment: p1 = p0 · [ (1/(n+1)) / (1/(n̄+1)) ]  clipped to [0.02, 0.95],
+ *  Step 2  Competitor adjustment: p1 = p0 · [ (1/(n+1)) / (1/(n̄+1)) ],
  *          where n = expected competitors on this bid and n̄ = typical competitors for the route.
  *
  *  Step 3  Position adjustment on the logit scale: logit(p) = logit(p1) + β·(s − 3),
- *          s = winnability score mapped to 1–5, β = 0.5 default (recalibrate from outcomes at ≥ 30 logged bids).
+ *          s = winnability score mapped to 1–5, β = 0.5 default. Refit β from your own outcomes only once
+ *          ≥ 60 decided bids are logged (ADR-0006) — below that the fit is noise.
+ *
+ *  Every step clips to [P_MIN, P_MAX] = [0.02, 0.95]: the model never claims a bid is certain either way.
  *
  *  Friedman / Gates price curves (hard-bid only): given bid coefficient of variation c (default 0.06) and your
  *  price position d relative to field mean (fraction, e.g. +0.03 = 3 % above), P(lowest | n) under a normal
@@ -22,12 +25,16 @@
 export const ALPHA_PSEUDO_BIDS = 10;
 export const DEFAULT_BETA = 0.5;
 export const DEFAULT_BID_CV = 0.06;
+export const P_MIN = 0.02;
+export const P_MAX = 0.95;
+/** Decided outcomes needed before β (or anything else) is refitted from the firm's own history. See ADR-0006. */
+export const MIN_OUTCOMES_TO_REFIT = 60;
 
 export const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
 export const logit = p => Math.log(p / (1 - p));
 export const invLogit = z => 1 / (1 + Math.exp(-z));
 
-/** Standard normal CDF (Abramowitz–Stegun 7.1.26). */
+/** Standard normal CDF — Abramowitz & Stegun (1964) formula 26.2.17, |error| < 7.5e-8. */
 export function normCdf(x) {
   const t = 1 / (1 + 0.2316419 * Math.abs(x));
   const d = 0.3989422804014327 * Math.exp(-x * x / 2);
@@ -43,22 +50,24 @@ export function baseRate({ wins = 0, bids = 0, mu, alpha = ALPHA_PSEUDO_BIDS }) 
 }
 
 export function competitorAdjust(p0, n, nTypical) {
-  if (n == null || nTypical == null) return clamp(p0, 0.02, 0.95);
+  if (n == null || nTypical == null) return clamp(p0, P_MIN, P_MAX);
   const factor = (1 / (n + 1)) / (1 / (nTypical + 1));
-  return clamp(p0 * factor, 0.02, 0.95);
+  return clamp(p0 * factor, P_MIN, P_MAX);
 }
 
 /** winnability 0–100 → position score 1–5 */
 export const winnabilityToScore = w => (w == null ? 3 : 1 + (w / 100) * 4);
 
 export function positionAdjust(p1, positionScore, beta = DEFAULT_BETA) {
-  const z = logit(clamp(p1, 0.02, 0.95)) + beta * (positionScore - 3);
-  return clamp(invLogit(z), 0.02, 0.98);
+  const z = logit(clamp(p1, P_MIN, P_MAX)) + beta * (positionScore - 3);
+  return clamp(invLogit(z), P_MIN, P_MAX);
 }
 
 /**
  * Full P(win).
  * @param {object} a  { route, wins, bids, competitors, winnability (0-100|null), beta }
+ * @returns { p, p0, p1, positionScore, kappa } — kappa is the Beta-Binomial posterior weight (α + logged bids),
+ *          the concentration the Monte Carlo uses to spread P(win) around p (see montecarlo.js).
  */
 export function pwin(a) {
   const mu = a.route.baseWin;
@@ -66,7 +75,8 @@ export function pwin(a) {
   const p1 = competitorAdjust(p0, a.competitors, a.route.typicalBidders);
   const s = winnabilityToScore(a.winnability);
   const p = positionAdjust(p1, s, a.beta ?? DEFAULT_BETA);
-  return { p, p0, p1, positionScore: s };
+  const kappa = ALPHA_PSEUDO_BIDS + Math.max(0, a.bids || 0);
+  return { p, p0, p1, positionScore: s, kappa };
 }
 
 /** Friedman & Gates P(lowest) for price position d (fraction vs field mean) against n competitors. */

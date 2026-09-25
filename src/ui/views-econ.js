@@ -24,8 +24,8 @@ export function renderEconomics(main, d, X) {
   const mc = value ? X.simulate({
     value: { min: value * (1 + (e.valueLowPct || 0) / 100), mode: value, max: value * (1 + (e.valueHighPct || 0) / 100) },
     marginPct: { min: beta.low, mode: beta.mode, max: beta.high },
-    pwin: { min: Math.max(0.01, d.pw.p * 0.6), mode: d.pw.p, max: Math.min(0.98, d.pw.p * 1.3 + 0.02) },
-    bidCost: d.ev.bidCost, levyRate: levies.reduce((s, l) => s + l.amount, 0) / (value || 1), iterations: 4000, seed: 7,
+    pwin: { mean: d.pw.p, kappa: d.pw.kappa },
+    bidCost: d.ev.bidCost, postAwardCost: d.ev.postAwardCost, levyRate: levies.reduce((s, l) => s + l.amount, 0) / (value || 1), iterations: 4000, seed: 7,
   }) : null;
 
   main.innerHTML = `
@@ -69,7 +69,7 @@ export function renderEconomics(main, d, X) {
         <div class="item"><span>After competitive position (${d.result.winnability == null ? 'unscored' : num(d.result.winnability, 0) + '/100'})</span><span class="mono"><b>${pct(d.pw.p)}</b></span></div>
       </div>
       ${d.curse ? '<div class="callout warn small" style="margin-top:8px"><b>Winner\'s-curse zone.</b> ≥ 6 bidders with unclear scope: the low bidder is usually the one who missed something. Raise contingency; do not cut markup.</div>' : ''}
-      <p class="small" style="margin-top:8px">Empirical-Bayes shrinkage toward the route base, 1/(n+1) competitor scaling, logit shift of β = 0.5 per point of competitive position. Recalibrate β once you have 30 logged outcomes.</p>
+      <p class="small" style="margin-top:8px">Empirical-Bayes shrinkage toward the route base, 1/(n+1) competitor scaling, logit shift of β = 0.5 per point of competitive position. Refit β from your own record only once 60 decided outcomes are logged.</p>
     </div>
     <div class="card" style="margin:0">
       <h2>Expected value</h2>
@@ -96,7 +96,7 @@ export function renderEconomics(main, d, X) {
       <div class="kpi"><div class="v">${money(mc.ev.p10)} · ${money(mc.ev.p90)}</div><div class="l">EV P10 · P90</div></div>
     </div>
     <div class="chart" style="height:170px"><canvas id="mcHist" aria-label="Histogram of simulated expected value"></canvas></div>
-    <p class="small" style="margin-top:6px">Value, margin and P(win) sampled from beta-PERT distributions (mean = (min + 4·mode + max)/6). Shaded band = P10–P90. Red = losses. Never present a point estimate where a range exists.</p>
+    <p class="small" style="margin-top:6px">Value and margin sampled from beta-PERT distributions (mean = (min + 4·mode + max)/6). P(win) sampled from Beta(κp, κ(1 − p)) around the modelled ${pct(d.pw.p)} with κ = ${d.pw.kappa} (10 pseudo-bids + ${e.bids || 0} logged on this route) — the spread narrows as your record grows. Shaded band = P10–P90. Red = losses. Never present a point estimate where a range exists.</p>
   </div>` : ''}
 
   ${isHard && value ? `<div class="card">
@@ -170,10 +170,10 @@ export function renderCapacity(main, d, X) {
 
   <div class="cols-2">
     <div class="card" style="margin:0">
-      <h2>This job — peak negative cash</h2>
+      <h2>This job — peak retention / AR exposure</h2>
       <div class="bignum">${d.thisPeak ? money(d.thisPeak.peak) : '–'}</div>
-      ${d.thisPeak ? `<div class="small muted">≈ ${pct(d.thisPeak.pct, 0)} of value · range ${money(d.thisPeak.low)} – ${money(d.thisPeak.high)}</div>
-      <p class="small" style="margin-top:8px">V × [(L/D) × 1.6 + r × (1 − g) − f]. Lag ${cap.payLagMonths} mo over ${b.durationMonths || 12} mo, retention ${pct(cap.retention, 1)}, margin ${b.econ.marginMode} %, front-load ${pct(cap.frontLoad, 0)}. No peer-reviewed constant exists — treat as a range and validate against your own draw history.</p>` : '<p class="small">Enter contract value and duration.</p>'}
+      ${d.thisPeak ? `<div class="small muted">≈ ${pct(d.thisPeak.pct, 0)} of value at month ${d.thisPeak.peakMonth} · range ${money(d.thisPeak.low)} – ${money(d.thisPeak.high)}</div>
+      <p class="small" style="margin-top:8px">Read off the same month-by-month S-curve as the portfolio chart: cost spent minus cash received, so it can never exceed the portfolio peak that includes it and is capped at cost (value × (1 − margin)). Lag ${cap.payLagMonths} mo over ${b.durationMonths || 12} mo, retention ${pct(cap.retention, 1)}, margin ${b.econ.marginMode} %, front-load ${pct(cap.frontLoad, 0)}. No peer-reviewed constant exists for a specialty sub's cash curve — treat the ±25 % as a range and validate against your own draw history.</p>` : '<p class="small">Enter contract value and duration.</p>'}
     </div>
     <div class="card" style="margin:0">
       <h2>Portfolio peak vs facility</h2>
@@ -184,10 +184,10 @@ export function renderCapacity(main, d, X) {
   </div>
 
   <div class="card">
-    <h2>Live jobs (for overlap) <button class="btn sm" id="addJob">+ add</button></h2>
-    ${cap.liveJobs.length ? `<div class="tbl-wrap"><table><thead><tr><th>Value</th><th>Duration (mo)</th><th>Started (months ago)</th><th></th></tr></thead><tbody>
-      ${cap.liveJobs.map((j, i) => `<tr><td><input class="mono" type="number" step="1000" data-job="${i}" data-k="value" value="${j.value ?? ''}" style="width:130px"></td><td><input class="mono" type="number" data-job="${i}" data-k="durationMonths" value="${j.durationMonths ?? ''}" style="width:70px"></td><td><input class="mono" type="number" data-job="${i}" data-k="startMonth" value="${j.startMonth == null ? '' : -j.startMonth}" style="width:70px"></td><td><button class="btn ghost sm" data-deljob="${i}">✕</button></td></tr>`).join('')}
-    </tbody></table></div>` : '<div class="empty">No live jobs entered. Add your current jobs to see retention / AR overlap.</div>'}
+    <h2>Live jobs (for overlap) <button type="button" class="btn sm" id="addJob">+ add</button></h2>
+    ${cap.liveJobs.length ? `<div class="tbl-wrap"><table><thead><tr><th>Value</th><th>Duration (mo)</th><th>Started (months ago)</th><th>Margin %</th><th></th></tr></thead><tbody>
+      ${cap.liveJobs.map((j, i) => `<tr><td><input class="mono" type="number" step="1000" id="lj_${i}_value" data-job="${i}" data-k="value" value="${j.value ?? ''}" style="width:130px" aria-label="Live job ${i + 1} value"></td><td><input class="mono" type="number" id="lj_${i}_durationMonths" data-job="${i}" data-k="durationMonths" value="${j.durationMonths ?? ''}" style="width:70px" aria-label="Live job ${i + 1} duration in months"></td><td><input class="mono" type="number" id="lj_${i}_startMonth" data-job="${i}" data-k="startMonth" value="${j.startMonth == null ? '' : -j.startMonth}" style="width:70px" aria-label="Live job ${i + 1} started months ago"></td><td><input class="mono" type="number" step="0.5" id="lj_${i}_marginPct" data-job="${i}" data-k="marginPct" value="${j.marginPct ?? ''}" placeholder="${b.econ.marginMode}" style="width:70px" aria-label="Live job ${i + 1} margin percent"></td><td><button type="button" class="btn ghost sm" data-deljob="${i}" aria-label="Remove live job ${i + 1}">✕</button></td></tr>`).join('')}
+    </tbody></table></div><p class="small muted" style="margin-top:6px">Margin is per job — blank uses this bid's most-likely margin (${b.econ.marginMode} %).</p>` : '<div class="empty">No live jobs entered. Add your current jobs to see retention / AR overlap.</div>'}
   </div>
 
   <div class="card">
@@ -223,11 +223,14 @@ export function renderCapacity(main, d, X) {
   bindNum(main, 'cpBacklog', v => cap.backlogValue = v, rerender);
   bindNum(main, 'cpEst', v => cap.estimatorLoadAfter = v, rerender);
   bindNum(main, 'cpCrew', v => cap.crewLoadAfter = v, rerender);
-  $('#addJob', main).onclick = () => { cap.liveJobs.push({ value: null, durationMonths: 4, startMonth: 0 }); rerender(); };
+  $('#addJob', main).onclick = () => { cap.liveJobs.push({ value: null, durationMonths: 4, startMonth: 0, marginPct: b.econ.marginMode }); rerender(); };
   $$('[data-deljob]', main).forEach(bt => bt.onclick = () => { cap.liveJobs.splice(Number(bt.dataset.deljob), 1); rerender(); });
   $$('[data-job]', main).forEach(inp => inp.addEventListener('input', e => {
     const j = cap.liveJobs[Number(inp.dataset.job)]; const k = inp.dataset.k; const v = e.target.value === '' ? null : Number(e.target.value);
-    j[k] = k === 'startMonth' ? (v == null ? 0 : -v) : v; rerender();
+    if (k === 'startMonth') j.startMonth = v == null ? 0 : -v;
+    else if (k === 'marginPct') { if (v == null) delete j.marginPct; else j.marginPct = v; }
+    else j[k] = v;
+    rerender();
   }));
   restoreFocus(main);
 }

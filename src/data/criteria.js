@@ -27,6 +27,15 @@
  * Criteria with no such source are marked "Practitioner / industry practice — no peer-reviewed source."
  */
 
+/**
+ * Minimum weighted coverage before a verdict band is issued. Coverage is the share of attractiveness weight
+ * whose criteria have been scored (group weight × scored / total in the group, summed). Below this — or with any
+ * gate criterion unscored — the verdict is INCOMPLETE, never GO. 70 % is a judgement call: it lets a scorer skip
+ * the handful of criteria they genuinely cannot see at bid stage while making "one 5 on a 42-line card → GO"
+ * impossible.
+ */
+export const VERDICT_COVERAGE_MIN = 0.70;
+
 export const GROUPS = [
   { id: 'client',    label: 'Client & Payment',        short: 'Client',    axis: 'attractiveness', icon: '◉' },
   { id: 'project',   label: 'Project & Scope',         short: 'Project',   axis: 'attractiveness', icon: '▣' },

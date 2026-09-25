@@ -16,10 +16,16 @@
  * Verdict bands (attractiveness): ≥ 75 GO · 60–74 GO WITH APPROVAL · 40–59 CONDITIONAL · < 40 NO-GO.
  * The 60–74 band is a routed state (Deltek Vantagepoint pattern), not just "amber".
  *
+ * COVERAGE. No verdict band is issued while any gate criterion is unscored, or while weighted coverage
+ * (see VERDICT_COVERAGE_MIN in criteria.js) is below the threshold: the band is INCOMPLETE and the result
+ * says how many more criteria to score. A gate criterion that *is* scored at its gate level still gates —
+ * gates never wait for coverage.
+ *
  * Pure functions. No DOM.
  */
 
-import { CRITERIA, CRITERIA_BY_ID, GROUPS } from '../data/criteria.js';
+import { CRITERIA, CRITERIA_BY_ID, GROUPS, VERDICT_COVERAGE_MIN } from '../data/criteria.js';
+import { mulberry32, seedFromString } from './montecarlo.js';
 
 export const BANDS = {
   GO:          { id: 'GO',          label: 'GO',                 min: 75, icon: '✔', tone: 'good' },
@@ -27,7 +33,11 @@ export const BANDS = {
   CONDITIONAL: { id: 'CONDITIONAL', label: 'CONDITIONAL',        min: 40, icon: '▲', tone: 'warn' },
   NOGO:        { id: 'NOGO',        label: 'NO-GO',              min: 0,  icon: '✖', tone: 'bad' },
   GATED:       { id: 'GATED',       label: 'NO-GO (GATED)',      min: -1, icon: '⛔', tone: 'bad' },
+  INCOMPLETE:  { id: 'INCOMPLETE',  label: 'INCOMPLETE',         min: -2, icon: '◌', tone: 'neutral' },
 };
+
+/** True for a band that is an actual verdict (GO … GATED); false for INCOMPLETE or null. */
+export const isVerdict = band => !!band && band.id !== 'INCOMPLETE';
 
 export function bandForScore(score) {
   if (score >= BANDS.GO.min) return BANDS.GO;
@@ -60,6 +70,42 @@ export function effectiveGroupWeights(preset, scores, criteriaList) {
   const norm = {};
   for (const gid of Object.keys(raw)) norm[gid] = raw[gid] / total;
   return { normalised: norm, totalRaw: total };
+}
+
+/**
+ * Weighted coverage and the shortest path to a verdict.
+ * Each attractiveness criterion is worth (its group's share of total attractiveness weight) / (criteria in the group).
+ * `moreNeeded` = every unscored gate criterion (mandatory) + the fewest further criteria, largest weight first,
+ * that lift coverage to VERDICT_COVERAGE_MIN.
+ */
+export function coverageGap(preset, scores, criteriaList, threshold = VERDICT_COVERAGE_MIN) {
+  const groupCount = {};
+  let wtot = 0;
+  for (const c of criteriaList) if (c.axis === 'attractiveness') groupCount[c.group] = (groupCount[c.group] || 0) + 1;
+  for (const gid of Object.keys(groupCount)) wtot += Math.max(0, preset.weights[gid] || 0);
+  const worth = c => (c.axis === 'attractiveness' && wtot > 0 ? Math.max(0, preset.weights[c.group] || 0) / wtot / groupCount[c.group] : 0);
+
+  let covered = 0;
+  const unscoredGates = [];
+  const unscoredOther = [];
+  for (const c of criteriaList) {
+    if (scores[c.id] != null) { covered += worth(c); continue; }
+    if (c.gate) unscoredGates.push(c); else if (c.axis === 'attractiveness') unscoredOther.push(c);
+  }
+  let moreNeeded = unscoredGates.length;
+  let projected = covered + unscoredGates.reduce((s, c) => s + worth(c), 0);
+  unscoredOther.sort((a, b) => worth(b) - worth(a));
+  for (const c of unscoredOther) {
+    if (projected >= threshold - 1e-9) break;
+    projected += worth(c); moreNeeded++;
+  }
+  return {
+    weightedCoverage: covered,
+    threshold,
+    unscoredGates: unscoredGates.map(c => ({ id: c.id, name: c.name })),
+    moreNeeded,
+    complete: unscoredGates.length === 0 && covered >= threshold - 1e-9,
+  };
 }
 
 /**
@@ -118,10 +164,13 @@ export function evaluate(preset, scores, dealKillers = [], opts = {}) {
     if (c.floor && s != null && s <= c.floor.at) floorHits.push({ id: c.id, name: c.name, score: s });
   }
 
+  // Coverage — a verdict needs every gate scored and enough of the weighted card filled in
+  const gap = coverageGap(p, scores, list);
+
   // Verdict
   let band;
   if (gateHits.length) band = BANDS.GATED;
-  else if (!anyAttractScored) band = null;
+  else if (!anyAttractScored || !gap.complete) band = BANDS.INCOMPLETE;
   else {
     band = bandForScore(attractiveness);
     if (floorHits.length && (band.id === 'GO' || band.id === 'APPROVAL')) band = BANDS.CONDITIONAL;
@@ -139,6 +188,10 @@ export function evaluate(preset, scores, dealKillers = [], opts = {}) {
     scoredCount,
     totalCount,
     coverage: totalCount ? scoredCount / totalCount : 0,
+    weightedCoverage: gap.weightedCoverage,
+    coverageThreshold: gap.threshold,
+    unscoredGates: gap.unscoredGates,
+    moreNeeded: gap.moreNeeded,
     criteria: list,
   };
 }
@@ -179,16 +232,19 @@ export function sensitivity(preset, scores, dealKillers = []) {
 /**
  * Weight-perturbation robustness: sample N random weight vectors within ±pct of the preset weights,
  * return the share of samples that land in the same band as the base verdict.
+ * Deterministic: the sampler is seeded (mulberry32) so the same bid always reports the same figure —
+ * pass `seed` (e.g. derived from the bid id via seedFromString) or your own `rng`.
  */
-export function robustness(preset, scores, dealKillers = [], { samples = 500, pct = 0.2, rng = Math.random } = {}) {
+export function robustness(preset, scores, dealKillers = [], { samples = 500, pct = 0.2, seed = 1, rng = null } = {}) {
   const base = evaluate(preset, scores, dealKillers);
-  if (!base.band || base.band.id === 'GATED') return { base, agreement: 1, bands: {} };
+  if (!isVerdict(base.band) || base.band.id === 'GATED') return { base, agreement: null, bands: {} };
+  const draw = rng || mulberry32(typeof seed === 'string' ? seedFromString(seed) : seed);
   const bands = {};
   let same = 0;
   const gids = Object.keys(preset.weights).filter(g => g !== 'compete' && preset.weights[g] > 0);
   for (let i = 0; i < samples; i++) {
     const w = {};
-    for (const g of gids) w[g] = preset.weights[g] * (1 + (rng() * 2 - 1) * pct);
+    for (const g of gids) w[g] = preset.weights[g] * (1 + (draw() * 2 - 1) * pct);
     const r = evaluate(preset, scores, dealKillers, { weightsOverride: w });
     const id = r.band ? r.band.id : 'NONE';
     bands[id] = (bands[id] || 0) + 1;
@@ -210,4 +266,4 @@ export function weakestLinks(result, scores, limit = 5) {
   return out.slice(0, limit);
 }
 
-export { CRITERIA_BY_ID };
+export { CRITERIA_BY_ID, VERDICT_COVERAGE_MIN };

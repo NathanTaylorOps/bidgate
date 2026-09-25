@@ -1,12 +1,18 @@
 /**
- * Monte Carlo on margin and P(win) using beta-PERT three-point inputs.
+ * Monte Carlo on value, margin and P(win).
  *
- *  PERT:  mean = (min + 4·mode + max) / 6
+ *  Value and margin — beta-PERT three-point inputs:
+ *         mean = (min + 4·mode + max) / 6
  *         α = 1 + 4·(mode − min)/(max − min),  β = 1 + 4·(max − mode)/(max − min)
  *         sample Beta(α, β) via two Gamma draws (Marsaglia–Tsang), scale to [min, max].
  *
+ *  P(win) — Beta(κ·p, κ·(1 − p)) around the modelled p, mean exactly p, concentration κ.
+ *         κ is the Beta-Binomial posterior weight from the P(win) model: α pseudo-bids (10) + the bids you have
+ *         logged on this route. With no history the spread is that of a 10-bid record (sd ≈ 0.15 at p = 0.33);
+ *         it tightens as outcomes accumulate, which is the point. A {min, mode, max} triple is still accepted (PERT).
+ *
  * Outputs P10 / P50 / P90 of margin and EV, P(margin < 0), P(EV < 0), histogram.
- * Deterministic when given a seeded rng (mulberry32) — tests rely on this.
+ * Deterministic when given a seed (mulberry32) — tests rely on this.
  */
 
 export function mulberry32(seed) {
@@ -17,6 +23,13 @@ export function mulberry32(seed) {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+}
+
+/** FNV-1a hash of a string → 32-bit seed, so a bid id maps to a stable RNG stream. */
+export function seedFromString(str) {
+  let h = 0x811c9dc5;
+  for (const ch of String(str ?? '')) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193); }
+  return h >>> 0;
 }
 
 function randn(rng) {
@@ -43,6 +56,13 @@ function gamma(k, rng) {
 function beta(a, b, rng) {
   const x = gamma(a, rng), y = gamma(b, rng);
   return x / (x + y);
+}
+
+/** Beta(κ·mean, κ·(1 − mean)) draw: mean preserved exactly, concentration κ (κ → ∞ is a point mass). */
+export function sampleBetaMean(mean, kappa, rng) {
+  const m = Math.min(0.999, Math.max(0.001, Number.isFinite(mean) ? mean : 0.5));
+  const k = Number.isFinite(kappa) && kappa > 0 ? kappa : 10;
+  return beta(m * k, (1 - m) * k, rng);
 }
 
 /**
@@ -78,22 +98,27 @@ export function quantile(sorted, q) {
 
 /**
  * @param {object} a {
- *   value: {min, mode, max}, marginPct: {min, mode, max}, pwin: {min, mode, max} (0–1),
- *   bidCost, levyRate (fraction of value), iterations, seed
+ *   value: {min, mode, max}, marginPct: {min, mode, max},
+ *   pwin: {mean, kappa} (Beta around the modelled p) — or {min, mode, max} (PERT),
+ *   bidCost, postAwardCost, levyRate (fraction of value), iterations, seed
  * }
+ * EV per run = p · (V·m − V·levyRate − postAwardCost) − bidCost, the same identity as expectedValue() in ev.js.
  */
 export function simulate(a) {
   const n = a.iterations || 5000;
   const rng = mulberry32(a.seed ?? 42);
   const margins = new Array(n), evs = new Array(n), profits = new Array(n);
+  const drawP = !a.pwin ? () => 1
+    : a.pwin.kappa != null || a.pwin.mean != null ? () => sampleBetaMean(a.pwin.mean, a.pwin.kappa, rng)
+    : () => samplePert(a.pwin.min, a.pwin.mode, a.pwin.max, rng);
   for (let i = 0; i < n; i++) {
     const V = samplePert(a.value.min, a.value.mode, a.value.max, rng);
     const m = samplePert(a.marginPct.min, a.marginPct.mode, a.marginPct.max, rng) / 100;
-    const p = a.pwin ? samplePert(a.pwin.min, a.pwin.mode, a.pwin.max, rng) : 1;
+    const p = drawP();
     const profit = V * m - V * (a.levyRate || 0);
     margins[i] = m * 100;
     profits[i] = profit;
-    evs[i] = p * profit - (a.bidCost || 0);
+    evs[i] = p * (profit - (a.postAwardCost || 0)) - (a.bidCost || 0);
   }
   const sm = margins.slice().sort((x, y) => x - y);
   const se = evs.slice().sort((x, y) => x - y);

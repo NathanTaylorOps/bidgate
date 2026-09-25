@@ -26,8 +26,11 @@ export function sampleBids() {
   });
   go.econ = { ...go.econ, marginLow: 16, marginMode: 21, marginHigh: 27, bidHours: 30, wins: 5, bids: 8 };
   go.capacity = { ...go.capacity, cash: 180_000, creditLine: 150_000, workingCapital: 260_000, backlogValue: 900_000, estimatorLoadAfter: 1, crewLoadAfter: 2,
-    liveJobs: [{ value: 350_000, durationMonths: 5, startMonth: -2 }, { value: 210_000, durationMonths: 4, startMonth: -1 }] };
+    liveJobs: [{ value: 350_000, durationMonths: 5, startMonth: -2, marginPct: 18 }, { value: 210_000, durationMonths: 4, startMonth: -1 }] };
   go.notes = { cl_funding: 'GC\'s contract with the ownership group is executed; PM confirmed funding letter on file.', co_influence: 'Helped the PM company standardise their LVT spec across three properties.' };
+  go.decision = { ...go.decision,
+    premortem: ['Unit-turn access slipped two months and the crew sat idle on a fixed labour price.', 'Moisture readings on the slab failed after we had mobilised; remediation fell to us.', 'LVT lead time doubled after award and the substitution was not approved in time.'],
+    decisionTaken: 'bid', decidedBy: 'Estimating lead · operations manager', decidedAt: '2026-09-16' };
 
   // 2 — GATED: commercial TI package, enforceable condition-precedent pay-if-paid and thin scope at bid
   const b = newBid('commercial_ti');

@@ -55,7 +55,7 @@ export function expectedValue(a) {
   const z = 1.0;
   const riskAdjEv = p * ((margin - z * sigma) * value - levyTotal - (a.postAwardCost || 0)) - bidCost;
 
-  return { value, grossProfit, levies, levyTotal, bidCost, net, ev, evPerHour, breakEvenP, pursuitRatio, sigma, riskAdjEv, hours };
+  return { value, grossProfit, levies, levyTotal, bidCost, postAwardCost: a.postAwardCost || 0, net, ev, evPerHour, breakEvenP, pursuitRatio, sigma, riskAdjEv, hours };
 }
 
 export function fmtMoney(n, locale = 'en-US', currency = 'USD', compact = true) {
