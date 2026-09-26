@@ -11,6 +11,7 @@ import { peakCash, portfolioPeak, capacityGates } from '../src/engine/capacity.j
 import { simulate, pertParams, mulberry32, samplePert } from '../src/engine/montecarlo.js';
 import { brier, reliability, hitRates, criterionSeparation, murphy } from '../src/engine/calibration.js';
 import { dealKillersFor, MITIGATIONS } from '../src/data/dealkillers.js';
+import { assess } from '../src/engine/assess.js';
 import { sampleBids } from '../samples/samples.js';
 import { migrate, normaliseBid, encodeShare, decodeShare, newBid, SCHEMA_VERSION } from '../src/ui/state.js';
 
@@ -58,15 +59,43 @@ test('deal-killers are preset-aware: certification and public-work toggles only 
 });
 
 /* ───────── samples ───────── */
-test('the three sample bids evaluate to GO / GATED / CONDITIONAL under their presets, fully scored', () => {
-  const presetFor = { sample_go: 'multifamily', sample_gated: 'commercial_ti', sample_cond: 'specialty_turf' };
-  const expected = { sample_go: 'GO', sample_gated: 'GATED', sample_cond: 'CONDITIONAL' };
+test('the six sample bids evaluate to their intended verdict bands under their presets, fully scored', () => {
+  const expected = {
+    sample_go: 'GO',
+    sample_gated: 'GATED',
+    sample_cond: 'CONDITIONAL',
+    sample_small_remodel: 'CONDITIONAL',
+    sample_large_ti_approval: 'APPROVAL',
+    sample_turf_nogo: 'NOGO',
+  };
   const samples = sampleBids();
-  assert.equal(samples.length, 3);
-  for (const b of samples) {
-    const r = evaluate(PRESETS[presetFor[b.id]], b.scores, b.dealKillers);
-    assert.equal(r.band.id, expected[b.id], `${b.id} expected ${expected[b.id]}, got ${r.band.id}`);
-    assert.equal(r.coverage, 1, `${b.id} should score every active criterion (${r.scoredCount}/${r.totalCount})`);
+  assert.equal(samples.length, 6);
+  const seenIds = new Set();
+  for (const { bid, presetId } of samples) {
+    assert.ok(PRESETS[presetId], `${bid.id} references an unknown preset ${presetId}`);
+    assert.ok(!seenIds.has(bid.id), `duplicate sample id ${bid.id}`); seenIds.add(bid.id);
+    assert.ok(bid.id in expected, `${bid.id} has no expected band in this test — add one`);
+    const r = evaluate(PRESETS[presetId], bid.scores, bid.dealKillers);
+    assert.equal(r.band.id, expected[bid.id], `${bid.id} expected ${expected[bid.id]}, got ${r.band.id}`);
+    assert.equal(r.coverage, 1, `${bid.id} should score every active criterion (${r.scoredCount}/${r.totalCount})`);
+  }
+});
+
+test('the six sample bids land on the same band through the full assess() pipeline (capacity gates included) as they do from the scoring engine alone', () => {
+  // This is the check that actually matches what the pipeline table and side panel show: a sample can score
+  // CONDITIONAL on criteria alone and still end up GATED once its cash/credit facility can't cover the peak
+  // retention/AR exposure of a bid this size — a capacity gate the plain evaluate() test above can't see.
+  const expected = {
+    sample_go: 'GO',
+    sample_gated: 'GATED',
+    sample_cond: 'CONDITIONAL',
+    sample_small_remodel: 'CONDITIONAL',
+    sample_large_ti_approval: 'APPROVAL',
+    sample_turf_nogo: 'NOGO',
+  };
+  for (const { bid, presetId } of sampleBids()) {
+    const a = assess(PRESETS[presetId], bid);
+    assert.equal(a.band.id, expected[bid.id], `${bid.id} expected ${expected[bid.id]} from assess(), got ${a.band.id} (capacity gates: ${a.capGates.map(g => g.id).join(', ') || 'none'})`);
   }
 });
 

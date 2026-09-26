@@ -386,7 +386,7 @@ function viewSettings(d) {
       <button type="button" class="btn" id="exportJson">Export JSON</button>
       <label class="btn" for="importJson" style="cursor:pointer">Import JSON</label><input type="file" id="importJson" accept="application/json" class="hidden">
       <button type="button" class="btn" id="shareUrl">Copy share link (this bid)</button>
-      <button type="button" class="btn" id="loadSamples">Load 3 sample bids</button>
+      <button type="button" class="btn" id="loadSamples">Load ${sampleBids().length} sample bids</button>
       <button type="button" class="btn danger" id="resetAll">Reset everything</button>
     </div>
     <p class="small" style="margin-top:8px">Everything is stored in this browser only (localStorage). Export before clearing site data. Import replaces your whole pipeline and settings — you are asked to confirm. Share links carry the current bid and your weights for it in the URL fragment, which is never sent to a server; whoever opens one is asked before it replaces their current bid, and your weights apply to that bid only, never to their settings.</p>
@@ -441,24 +441,24 @@ function bindSettings(root) {
     const url = location.origin + location.pathname + '#share=' + hash;
     try { await navigator.clipboard.writeText(url); toast('Share link copied'); } catch { prompt('Copy this link', url); }
   };
-  $('#loadSamples', root).onclick = () => { loadSamples(); toast('Loaded 3 sample bids into the pipeline'); };
+  $('#loadSamples', root).onclick = () => { const n = loadSamples(); toast(`Loaded ${n} sample bids into the pipeline`); };
   $('#resetAll', root).onclick = () => { if (confirm('Delete all bids, settings and history in this browser?')) { state = S.defaultState(); commit({ rerender: true }); } };
 }
 export function download(name, text, type) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
 }
-/** Samples go through the same assess() → pipelineRecord() path as a hand-scored bid, so they carry the same fields, computed the same way. */
+/** Samples go through the same assess() → pipelineRecord() path as a hand-scored bid, so they carry the same fields, computed the same way. Returns how many were (re)loaded. */
 function loadSamples({ rerender = true } = {}) {
   const samples = sampleBids();
-  for (const bid of samples) {
-    const presetId = bid.id === 'sample_gated' ? 'commercial_ti' : bid.id === 'sample_cond' ? 'specialty_turf' : 'multifamily';
+  for (const { bid, presetId } of samples) {
     const rec = pipelineRecord(assess(PRESETS[presetId], bid), bid, presetId, null, { sample: true });
     const i = state.saved.findIndex(s => s.id === bid.id);
     if (i >= 0) state.saved[i] = rec; else state.saved.push(rec);
   }
-  // also make the GO sample the current bid if the current one is empty
-  if (!Object.keys(state.bid.scores).length) { state.presetId = 'multifamily'; state.bid = JSON.parse(JSON.stringify(samples[0])); }
+  // also make the first (GO) sample the current bid if the current one is empty
+  if (!Object.keys(state.bid.scores).length) { state.presetId = samples[0].presetId; state.bid = JSON.parse(JSON.stringify(samples[0].bid)); }
   if (rerender) commit({ rerender: true }); else S.save(state);
+  return samples.length;
 }
 
 /* ───────────────────────────── boot ───────────────────────────── */
