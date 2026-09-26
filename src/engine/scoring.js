@@ -27,13 +27,15 @@
 import { CRITERIA, CRITERIA_BY_ID, GROUPS, VERDICT_COVERAGE_MIN } from '../data/criteria.js';
 import { mulberry32, seedFromString } from './montecarlo.js';
 
+// `icon` is a plain glyph used in the print memo (plain text, no SVG there); `svgIcon` names an
+// icon from ui/icons.js for on-screen rendering.
 export const BANDS = {
-  GO:          { id: 'GO',          label: 'GO',                 min: 75, icon: '✔', tone: 'good' },
-  APPROVAL:    { id: 'APPROVAL',    label: 'GO WITH APPROVAL',   min: 60, icon: '◐', tone: 'mid' },
-  CONDITIONAL: { id: 'CONDITIONAL', label: 'CONDITIONAL',        min: 40, icon: '▲', tone: 'warn' },
-  NOGO:        { id: 'NOGO',        label: 'NO-GO',              min: 0,  icon: '✖', tone: 'bad' },
-  GATED:       { id: 'GATED',       label: 'NO-GO (GATED)',      min: -1, icon: '⛔', tone: 'bad' },
-  INCOMPLETE:  { id: 'INCOMPLETE',  label: 'INCOMPLETE',         min: -2, icon: '◌', tone: 'neutral' },
+  GO:          { id: 'GO',          label: 'GO',                 min: 75, icon: '✔', svgIcon: 'check-circle',   tone: 'good' },
+  APPROVAL:    { id: 'APPROVAL',    label: 'GO WITH APPROVAL',   min: 60, icon: '◐', svgIcon: 'shield',          tone: 'mid' },
+  CONDITIONAL: { id: 'CONDITIONAL', label: 'CONDITIONAL',        min: 40, icon: '▲', svgIcon: 'alert-triangle',  tone: 'warn' },
+  NOGO:        { id: 'NOGO',        label: 'NO-GO',              min: 0,  icon: '✖', svgIcon: 'x-circle',        tone: 'bad' },
+  GATED:       { id: 'GATED',       label: 'NO-GO (GATED)',      min: -1, icon: '⛔', svgIcon: 'slash',           tone: 'bad' },
+  INCOMPLETE:  { id: 'INCOMPLETE',  label: 'INCOMPLETE',         min: -2, icon: '◌', svgIcon: 'circle',          tone: 'neutral' },
 };
 
 /** True for a band that is an actual verdict (GO … GATED); false for INCOMPLETE or null. */

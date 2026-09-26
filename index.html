@@ -48,9 +48,10 @@ h1,h2,h3{text-wrap:balance;letter-spacing:-.01em}
 .hidden{display:none!important}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.icon{flex-shrink:0;vertical-align:-3px}
 
 /* ═══════════════════════ LAYOUT ═══════════════════════ */
-.wrap{max-width:1240px;margin:0 auto;padding-block:16px 48px}
+.wrap{max-width:1320px;margin:0 auto;padding-block:16px 48px}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:14px}
 .brand{display:flex;align-items:baseline;gap:10px}
 .brand h1{font-size:1.15rem;font-weight:700}
@@ -229,7 +230,7 @@ footer{margin-top:28px;font-size:.72rem;color:var(--muted);text-align:center;lin
         <button id="modeSimple" aria-pressed="true">Simple</button>
         <button id="modeExpert" aria-pressed="false">Expert</button>
       </div>
-      <button class="btn ghost" id="themeBtn" title="Toggle theme" aria-label="Toggle theme">◐</button>
+      <button class="btn ghost" id="themeBtn" title="Toggle theme" aria-label="Toggle theme" aria-pressed="false"></button>
     </div>
   </div>
 

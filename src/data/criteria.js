@@ -36,14 +36,15 @@
  */
 export const VERDICT_COVERAGE_MIN = 0.70;
 
+// `icon` names an icon from ui/icons.js (rendered on screen via icon(g.icon)).
 export const GROUPS = [
-  { id: 'client',    label: 'Client & Payment',        short: 'Client',    axis: 'attractiveness', icon: '◉' },
-  { id: 'project',   label: 'Project & Scope',         short: 'Project',   axis: 'attractiveness', icon: '▣' },
-  { id: 'contract',  label: 'Contract & Risk',         short: 'Contract',  axis: 'attractiveness', icon: '§' },
-  { id: 'capacity',  label: 'Capacity & Backlog',      short: 'Capacity',  axis: 'attractiveness', icon: '◫' },
-  { id: 'materials', label: 'Materials & Installation', short: 'Materials', axis: 'attractiveness', icon: '⚒' },
-  { id: 'strategic', label: 'Strategic Value',         short: 'Strategy',  axis: 'attractiveness', icon: '◈' },
-  { id: 'compete',   label: 'Competitive Position',    short: 'Compete',   axis: 'winnability',    icon: '⇄' },
+  { id: 'client',    label: 'Client & Payment',        short: 'Client',    axis: 'attractiveness', icon: 'user' },
+  { id: 'project',   label: 'Project & Scope',         short: 'Project',   axis: 'attractiveness', icon: 'clipboard' },
+  { id: 'contract',  label: 'Contract & Risk',         short: 'Contract',  axis: 'attractiveness', icon: 'file-text' },
+  { id: 'capacity',  label: 'Capacity & Backlog',      short: 'Capacity',  axis: 'attractiveness', icon: 'package' },
+  { id: 'materials', label: 'Materials & Installation', short: 'Materials', axis: 'attractiveness', icon: 'tool' },
+  { id: 'strategic', label: 'Strategic Value',         short: 'Strategy',  axis: 'attractiveness', icon: 'compass' },
+  { id: 'compete',   label: 'Competitive Position',    short: 'Compete',   axis: 'winnability',    icon: 'users' },
 ];
 
 export const CRITERIA = [

@@ -9,6 +9,7 @@ import { simulate } from '../engine/montecarlo.js';
 import { assess, effectivePreset, pipelineRecord } from '../engine/assess.js';
 import * as S from './state.js';
 import * as C from './charts.js';
+import { icon } from './icons.js';
 import { sampleBids } from '../../samples/samples.js';
 import { renderEconomics, renderCapacity } from './views-econ.js';
 import { renderDecision, renderPipeline, renderCalibration, renderMemo } from './views-decide.js';
@@ -58,17 +59,17 @@ export function setView(v) { state.view = v; S.save(state); render(); }
 
 /* ───────────────────────────── nav ───────────────────────────── */
 const VIEWS = [
-  { id: 'gates', label: 'Gates', icon: '⛔' },
-  { id: 'score', label: 'Score', icon: '▤' },
-  { id: 'economics', label: 'Economics', icon: '∑' },
-  { id: 'capacity', label: 'Capacity & Materials', icon: '⚒' },
-  { id: 'decision', label: 'Decision', icon: '✔' },
-  { id: 'pipeline', label: 'Pipeline', icon: '◫' },
-  { id: 'calibration', label: 'Calibration', icon: '◎' },
-  { id: 'settings', label: 'Settings', icon: '⚙' },
+  { id: 'gates', label: 'Gates', icon: 'slash' },
+  { id: 'score', label: 'Score', icon: 'bar-chart-2' },
+  { id: 'economics', label: 'Economics', icon: 'dollar-sign' },
+  { id: 'capacity', label: 'Capacity & Materials', icon: 'tool' },
+  { id: 'decision', label: 'Decision', icon: 'check-circle' },
+  { id: 'pipeline', label: 'Pipeline', icon: 'layers' },
+  { id: 'calibration', label: 'Calibration', icon: 'target' },
+  { id: 'settings', label: 'Settings', icon: 'settings' },
 ];
 function renderNav() {
-  $('#nav').innerHTML = VIEWS.map(v => `<button type="button" data-view="${v.id}" ${state.view === v.id ? 'aria-current="page"' : ''}><span aria-hidden="true">${v.icon}</span>${v.label}<span class="badge" id="badge_${v.id}"></span></button>`).join('');
+  $('#nav').innerHTML = VIEWS.map(v => `<button type="button" data-view="${v.id}" ${state.view === v.id ? 'aria-current="page"' : ''}>${icon(v.icon)}${v.label}<span class="badge" id="badge_${v.id}"></span></button>`).join('');
   $$('#nav button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
   updateNavBadges();
 }
@@ -98,7 +99,7 @@ export function renderSide() {
   const r = d.result;
   const band = d.band;
   const tone = band ? band.tone : 'neutral';
-  const title = band ? `<span aria-hidden="true">${band.icon}</span>${band.label}` : 'Not yet scored';
+  const title = band ? `${icon(band.svgIcon)}${band.label}` : 'Not yet scored';
   let why = '';
   if (!band) why = 'Score criteria to generate a recommendation. Gates are evaluated first.';
   else if (band.id === 'GATED') why = `${d.allGates.length} gate${d.allGates.length > 1 ? 's' : ''} active — disqualified regardless of score.`;
@@ -122,7 +123,7 @@ export function renderSide() {
       </div>
       <div class="progress" style="margin-top:10px" title="${r.scoredCount} of ${r.totalCount} criteria scored"><i style="width:${(r.coverage * 100).toFixed(0)}%"></i></div>
       <div class="small muted" style="margin-top:4px">${r.scoredCount}/${r.totalCount} criteria scored · ${(r.weightedCoverage * 100).toFixed(0)} % of weight${d.curse ? ' · <span style="color:var(--warn)">winner\'s-curse zone</span>' : ''}</div>
-      ${d.allGates.length ? `<div class="gatelist">${d.allGates.map(g => `<div class="g"><span aria-hidden="true">⛔</span><span>${esc(g.name)}${g.detail ? ` <span class="muted">— ${esc(g.detail)}</span>` : ''}</span></div>`).join('')}</div>` : ''}
+      ${d.allGates.length ? `<div class="gatelist">${d.allGates.map(g => `<div class="g">${icon('slash')}<span>${esc(g.name)}${g.detail ? ` <span class="muted">— ${esc(g.detail)}</span>` : ''}</span></div>`).join('')}</div>` : ''}
     </div>
     <div class="card">
       <h2>Category profile</h2>
@@ -130,7 +131,7 @@ export function renderSide() {
       <div class="stack" style="margin-top:8px">
         ${GROUPS.filter(g => r.groupStats[g.id].count > 0).map(g => {
           const gs = r.groupStats[g.id];
-          return `<div class="row between small"><span>${g.icon} ${g.label}</span><span class="mono">${gs.pct == null ? '–' : gs.pct.toFixed(0)}${g.axis === 'attractiveness' && gs.weight ? ` <span class="muted">· w ${(gs.weight * 100).toFixed(0)}%</span>` : ''}</span></div>`;
+          return `<div class="row between small"><span>${icon(g.icon)} ${g.label}</span><span class="mono">${gs.pct == null ? '–' : gs.pct.toFixed(0)}${g.axis === 'attractiveness' && gs.weight ? ` <span class="muted">· w ${(gs.weight * 100).toFixed(0)}%</span>` : ''}</span></div>`;
         }).join('')}
       </div>
     </div>
@@ -229,7 +230,7 @@ function viewGates(d) {
     <h2>Gate criteria <span class="pill neutral">score of 1 = gate</span></h2>
     <p style="margin-bottom:10px">These criteria in the scorecard carry a hard gate at 1. An unscored gate criterion is not a pass: the verdict stays INCOMPLETE until every one of them is scored.</p>
     <div class="list">
-      ${gateCriteria.map(c => { const s = d.b.scores[c.id]; const hit = s != null && s <= c.gate.at; return `<div class="item"><span>${esc(c.name)}</span><span class="pill ${hit ? 'bad' : s == null ? 'warn' : 'good'}">${hit ? '⛔ gated' : s == null ? '◌ unscored' : '✔ ' + s}</span></div>`; }).join('')}
+      ${gateCriteria.map(c => { const s = d.b.scores[c.id]; const hit = s != null && s <= c.gate.at; return `<div class="item"><span>${esc(c.name)}</span><span class="pill ${hit ? 'bad' : s == null ? 'warn' : 'good'}">${hit ? icon('x-circle') + ' gated' : s == null ? icon('circle') + ' unscored' : icon('check') + ' ' + s}</span></div>`; }).join('')}
     </div>
   </div>
   <div class="card">
@@ -260,7 +261,7 @@ function viewScore(d) {
     const w = d.p.weights[g.id];
     return `<div class="group card" data-group="${g.id}">
       <div class="group-head" data-toggle="${g.id}">
-        <div class="t"><span aria-hidden="true">${g.icon}</span>${g.label}${g.axis === 'winnability' ? ' <span class="pill mid">winnability axis</span>' : ''}</div>
+        <div class="t">${icon(g.icon)}${g.label}${g.axis === 'winnability' ? ' <span class="pill mid">winnability axis</span>' : ''}</div>
         <div class="m"><span id="gpct_${g.id}">${gs.pct == null ? '–' : gs.pct.toFixed(0)}</span>${g.axis === 'attractiveness' ? `<span class="muted">w ${w}%</span>` : ''}<span id="gcnt_${g.id}">${gs.n}/${gs.count}</span><span aria-hidden="true">▾</span></div>
       </div>
       <div class="group-body" id="gbody_${g.id}">
@@ -370,7 +371,7 @@ function viewSettings(d) {
     ${bidOv ? `<div class="callout warn small" style="margin-bottom:10px"><b>This bid carries its own weights</b> (it arrived by share link): ${groups.map(g => `${g.short} ${bidOv[g.id] ?? p.weights[g.id]}`).join(' · ')}. They apply to this bid only; the weights below are your saved settings and are unchanged. <button type="button" class="btn sm" id="wDropBid" style="margin-left:6px">Use my weights for this bid</button></div>` : ''}
     <p style="margin-bottom:10px">Direct weights are "Quick mode". The UK Government Analysis Function calls simple importance weighting invalid because it ignores the <i>range</i> of performance — use <b>Swing</b> (rate each group's worst→best swing, biggest = 100) or the <b>AHP</b> wizard (pairwise, with a consistency check) in Expert mode.</p>
     <div class="stack">
-      ${groups.map(g => `<div class="row" style="gap:10px"><label for="w_${g.id}" style="flex:1">${g.icon} ${g.label}</label><input id="w_${g.id}" class="mono" type="number" min="0" max="100" step="1" data-w="${g.id}" value="${ov[g.id] ?? p.weights[g.id]}" style="width:70px;text-align:right;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:4px 6px"><span class="muted small">%</span><span class="muted small mono" style="width:60px;text-align:right">default ${p.weights[g.id]}</span></div>`).join('')}
+      ${groups.map(g => `<div class="row" style="gap:10px"><label for="w_${g.id}" style="flex:1">${icon(g.icon)} ${g.label}</label><input id="w_${g.id}" class="mono" type="number" min="0" max="100" step="1" data-w="${g.id}" value="${ov[g.id] ?? p.weights[g.id]}" style="width:70px;text-align:right;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:4px 6px"><span class="muted small">%</span><span class="muted small mono" style="width:60px;text-align:right">default ${p.weights[g.id]}</span></div>`).join('')}
     </div>
     <div class="row" style="margin-top:10px;gap:6px">
       <button type="button" class="btn sm" id="wReset">Reset to preset</button>

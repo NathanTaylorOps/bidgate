@@ -3,6 +3,7 @@ import { brier, reliability, hitRates, criterionSeparation, murphy, overrideRate
 import { PRESETS } from '../data/presets.js';
 import { GROUPS as GROUPS_FOR_MEMO } from '../data/criteria.js';
 import { MITIGATIONS as MITIGATIONS_FOR_MEMO } from '../data/dealkillers.js';
+import { icon } from './icons.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -39,11 +40,11 @@ export function renderDecision(main, d, X) {
   main.innerHTML = `
   <div class="verdict ${band ? band.tone : 'neutral'}" style="margin-bottom:12px">
     <div class="eyebrow">Decision · ${esc(b.name || 'Unnamed bid')}</div>
-    <div class="title">${band ? `<span aria-hidden="true">${band.icon}</span>${band.label}` : 'Not yet scored'}</div>
+    <div class="title">${band ? `${icon(band.svgIcon)}${band.label}` : 'Not yet scored'}</div>
     <div class="why">Attractiveness ${num(d.result.attractiveness, 0)} · Winnability ${d.result.winnability == null ? '–' : num(d.result.winnability, 0)} · P(win) ${pct(d.pw.p)} · EV ${b.value ? money(d.ev.ev) : '–'} · ${d.result.scoredCount}/${d.result.totalCount} scored</div>
-    ${d.allGates.length ? `<div class="gatelist">${d.allGates.map(g => `<div class="g"><span aria-hidden="true">⛔</span><span>${esc(g.name)}${g.detail ? ` — ${esc(g.detail)}` : ''}</span></div>`).join('')}</div>` : ''}
-    ${band && band.id === 'INCOMPLETE' ? `<div class="small" style="margin-top:6px">◌ ${esc(X.incompleteWhy(d.result))}</div>` : ''}
-    ${verdict && d.result.floorHits.length ? `<div class="small" style="margin-top:6px;color:var(--warn)">▲ Weakest-link floor: ${d.result.floorHits.map(f => esc(f.name)).join('; ')} ≤ 2 → capped at CONDITIONAL.</div>` : ''}
+    ${d.allGates.length ? `<div class="gatelist">${d.allGates.map(g => `<div class="g">${icon('slash')}<span>${esc(g.name)}${g.detail ? ` — ${esc(g.detail)}` : ''}</span></div>`).join('')}</div>` : ''}
+    ${band && band.id === 'INCOMPLETE' ? `<div class="small" style="margin-top:6px">${icon('circle')} ${esc(X.incompleteWhy(d.result))}</div>` : ''}
+    ${verdict && d.result.floorHits.length ? `<div class="small" style="margin-top:6px;color:var(--warn)">${icon('alert-triangle')} Weakest-link floor: ${d.result.floorHits.map(f => esc(f.name)).join('; ')} ≤ 2 → capped at CONDITIONAL.</div>` : ''}
   </div>
 
   <div class="cols-2">
