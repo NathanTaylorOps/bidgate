@@ -492,14 +492,22 @@ function boot() {
   $('#presetSelect').addEventListener('change', e => { setPreset(e.target.value); commit({ rerender: true }); });
   $('#modeSimple').onclick = () => { state.mode = 'simple'; commit({ rerender: true }); };
   $('#modeExpert').onclick = () => { state.mode = 'expert'; commit({ rerender: true }); };
+  const applyTheme = t => {
+    document.documentElement.dataset.theme = t;
+    const btn = $('#themeBtn');
+    if (btn) { btn.innerHTML = icon(t === 'dark' ? 'moon' : 'sun'); btn.setAttribute('aria-pressed', t === 'dark'); }
+  };
   $('#themeBtn').onclick = () => {
-    const root = document.documentElement; const cur = root.dataset.theme;
-    const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-    if (!cur) root.dataset.theme = dark ? 'light' : 'dark'; else if (cur === 'dark') root.dataset.theme = 'light'; else delete root.dataset.theme;
-    try { localStorage.setItem('bidgate.theme', root.dataset.theme || ''); } catch {}
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem('bidgate.theme', next); } catch {}
     render();
   };
-  try { const t = localStorage.getItem('bidgate.theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+  // Light mode is the default (enterprise-software convention) — only switch to dark on an explicit
+  // saved preference. The prefers-color-scheme media query in the stylesheet still covers a no-JS load.
+  let savedTheme = null;
+  try { savedTheme = localStorage.getItem('bidgate.theme'); } catch {}
+  applyTheme(savedTheme === 'dark' ? 'dark' : 'light');
   window.addEventListener('beforeprint', () => { $('#memo').innerHTML = renderMemo(compute(), state); });
   render();
 }
