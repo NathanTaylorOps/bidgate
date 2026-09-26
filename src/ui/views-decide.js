@@ -133,7 +133,7 @@ export function renderPipeline(main, d, X) {
         <td class="num"><input type="number" step="0.1" data-margin="${s.id}" value="${s.actualMargin ?? ''}" style="width:64px;text-align:right" class="mono" ${s.outcome === 'won' ? '' : 'disabled'} aria-label="Actual margin for ${esc(s.bid.name || 'Unnamed')}"></td>
         <td><div class="row" style="gap:2px;flex-wrap:nowrap"><button type="button" class="btn ghost sm" data-load="${s.id}" title="Load into editor" aria-label="Load ${esc(s.bid.name || 'Unnamed')} into editor">↩</button><button type="button" class="btn ghost sm" data-del="${s.id}" title="Delete" aria-label="Delete ${esc(s.bid.name || 'Unnamed')}">✕</button></div></td>
       </tr>`).join('')}
-    </tbody></table></div>` : ''}
+    </tbody></table></div>` : '<div class="empty">Nothing saved yet — bids you save from the side panel show up here, ready to compare and track to an outcome.</div>'}
   </div>
   <div id="compareCard"></div>`;
 
