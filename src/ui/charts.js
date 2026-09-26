@@ -40,7 +40,7 @@ export function make(id, config) {
 
 export function fontDefaults() {
   if (typeof Chart === 'undefined') return;
-  Chart.defaults.font.family = "'IBM Plex Sans', system-ui, sans-serif";
+  Chart.defaults.font.family = "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
   Chart.defaults.font.size = 11;
   Chart.defaults.color = token('--muted');
 }
@@ -128,7 +128,7 @@ export function bubble(id, points, { xTitle = 'Winnability (P(win) %)', yTitle =
       ctx.strokeStyle = token('--border2'); ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
       const x50 = scales.x.getPixelForValue(50), y60 = scales.y.getPixelForValue(60);
       ctx.beginPath(); ctx.moveTo(x50, a.top); ctx.lineTo(x50, a.bottom); ctx.moveTo(a.left, y60); ctx.lineTo(a.right, y60); ctx.stroke();
-      ctx.fillStyle = token('--muted'); ctx.font = '10px IBM Plex Sans'; ctx.setLineDash([]);
+      ctx.fillStyle = token('--muted'); ctx.font = '10px ui-sans-serif, system-ui, sans-serif'; ctx.setLineDash([]);
       ctx.fillText('PURSUE', scales.x.getPixelForValue(78), scales.y.getPixelForValue(96));
       ctx.fillText('ATTRACTIVE BUT LONG SHOT', scales.x.getPixelForValue(4), scales.y.getPixelForValue(96));
       ctx.fillText('WINNABLE BUT POOR FIT', scales.x.getPixelForValue(54), scales.y.getPixelForValue(6));

@@ -82,7 +82,7 @@ docs/METHODOLOGY.md        sources and formulas
 docs/adr/                  architecture decision records
 ```
 
-The engine is pure functions with no DOM, so it is unit-tested directly. The UI is plain DOM + Chart.js from cdnjs — no framework, no bundler, no npm install.
+The engine is pure functions with no DOM, so it is unit-tested directly. The UI is plain DOM + Chart.js — vendored in `vendor/`, not loaded from a CDN — no framework, no bundler, no npm install.
 
 ```bash
 git clone https://github.com/NathanTaylorOps/bidgate.git

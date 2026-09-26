@@ -37,6 +37,15 @@ for (const [k, src] of modules) imports[k] = 'data:text/javascript;base64,' + Bu
 let html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const importMap = `<script type="importmap">${JSON.stringify({ imports })}</script>`;
 html = html.replace(/<script type="module" src="\.\/src\/ui\/app\.js"><\/script>/, `${importMap}\n<script type="module">import 'bidgate/${entry}';</script>`);
+
+// Chart.js is vendored in the repo (see vendor/README.md) specifically so this single file has
+// no runtime network dependency. Inline its source instead of the <script src="./vendor/..."> tag
+// so dist/bidgate.html stays a true single file — no sibling vendor/ folder needed to open it.
+const chartSrc = fs.readFileSync(path.join(root, 'vendor', 'chart.umd.min.js'), 'utf8');
+html = html.replace(
+  '<script src="./vendor/chart.umd.min.js"></script>',
+  `<script>\n${chartSrc}\n</script>`
+);
 html = html.replace('<title>BidGate</title>', '<title>BidGate</title>\n<!-- Single-file build. Source: https://github.com/NathanTaylorOps/bidgate -->');
 // index.html already links METHODOLOGY.md by absolute GitHub URL (the single file may be opened from a USB stick,
 // where a relative docs/ link would dangle). This rewrite is kept as a no-op-safe guard should it ever go relative again.
