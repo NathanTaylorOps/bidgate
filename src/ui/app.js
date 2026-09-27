@@ -366,7 +366,7 @@ function viewSettings(d) {
       ${PRESET_LIST.map(x => `<label class="row" style="gap:10px;align-items:flex-start;padding:8px;border:1px solid ${x.id === p.id ? 'var(--accent)' : 'var(--border)'};border-radius:var(--r);cursor:pointer"><input type="radio" name="preset" value="${x.id}" ${x.id === p.id ? 'checked' : ''} style="margin-top:4px"><div><div style="font-weight:600">${esc(x.label)}</div><div class="small muted">${esc(x.tagline)}</div><div class="small muted mono">${x.locale.currency} · ${x.locale.areaUnit} · margin ${x.economics.marginPct.low}–${x.economics.marginPct.high} % · ${x.contexts.join(', ')}</div></div></label>`).join('')}
     </div>
   </div>
-  <div class="card">
+  <div class="card" id="weightsCard">
     <h2>Group weights <span class="mono ${Math.abs(total - 100) < 0.5 ? 'muted' : ''}" style="${Math.abs(total - 100) < 0.5 ? '' : 'color:var(--bad)'}">Σ ${total.toFixed(0)} %</span></h2>
     ${bidOv ? `<div class="callout warn small" style="margin-bottom:10px"><b>This bid carries its own weights</b> (it arrived by share link): ${groups.map(g => `${g.short} ${bidOv[g.id] ?? p.weights[g.id]}`).join(' · ')}. They apply to this bid only; the weights below are your saved settings and are unchanged. <button type="button" class="btn sm" id="wDropBid" style="margin-left:6px">Use my weights for this bid</button></div>` : ''}
     <p style="margin-bottom:10px">Direct weights are "Quick mode". The UK Government Analysis Function calls simple importance weighting invalid because it ignores the <i>range</i> of performance — use <b>Swing</b> (rate each group's worst→best swing, biggest = 100) or the <b>AHP</b> wizard (pairwise, with a consistency check) in Expert mode.</p>
@@ -409,7 +409,7 @@ function bindSettings(root) {
     state.weightsOverride[p.id][inp.dataset.w] = Number(inp.value) || 0;
     commit();
     const total = $$('[data-w]', root).reduce((s, i) => s + (Number(i.value) || 0), 0);
-    const h = $('.card:nth-of-type(2) h2 .mono', root); if (h) { h.textContent = `Σ ${total.toFixed(0)} %`; h.style.color = Math.abs(total - 100) < 0.5 ? '' : 'var(--bad)'; }
+    const h = $('#weightsCard h2 .mono', root); if (h) { h.textContent = `Σ ${total.toFixed(0)} %`; h.style.color = Math.abs(total - 100) < 0.5 ? '' : 'var(--bad)'; }
   }));
   $('#wReset', root).onclick = () => { delete state.weightsOverride[preset().id]; commit({ rerender: true }); };
   const drop = $('#wDropBid', root); if (drop) drop.onclick = () => { delete state.bid.weightsOverride; commit({ rerender: true }); toast('Bid now uses your weights'); };
