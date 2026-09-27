@@ -4,7 +4,7 @@
 
 > Live demo → [NathanTaylorOps.github.io/bidgate](https://NathanTaylorOps.github.io/bidgate/) · Single file → [`dist/bidgate.html`](dist/bidgate.html) (download, open, works offline)
 
-![tests](https://img.shields.io/badge/tests-43%20passing-009E73) ![deps](https://img.shields.io/badge/runtime%20deps-Chart.js%20only-0072B2) ![build](https://img.shields.io/badge/build-none-8f96ad) ![licence](https://img.shields.io/badge/licence-MIT-8f96ad)
+[![CI](https://github.com/NathanTaylorOps/bidgate/actions/workflows/ci.yml/badge.svg)](https://github.com/NathanTaylorOps/bidgate/actions/workflows/ci.yml) ![deps](https://img.shields.io/badge/runtime%20deps-Chart.js%20only-0072B2) ![build](https://img.shields.io/badge/build-none-8f96ad) [![licence](https://img.shields.io/badge/licence-MIT-8f96ad)](LICENSE)
 
 ![BidGate score view](assets/score.png)
 

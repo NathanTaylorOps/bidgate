@@ -6,18 +6,42 @@
 <title>BidGate</title>
 <meta name="description" content="Go / no-go bid qualification for flooring, tile and specialty-surface subcontractors. Gates before scores, expected value with uncertainty, materials & installation risk, and a calibration loop. Local-first — nothing leaves your browser.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzJmNGE4YSIvPjxwYXRoIGQ9Ik0xNiA2IDI1IDkuNVYxNmMwIDYtNC41IDkuNS05IDExLTQuNS0xLjUtOS01LTktMTFWOS41WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTIgMTYuMiAxNSAxOS4yIDIwLjUgMTIuOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIuMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+Cg==">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzJmNGE4YSIvPjxwYXRoIGQ9Ik0xNiA2IDI1IDkuNVYxNmMwIDYtNC41IDkuNS05IDExLTQuNS0xLjUtOS01LTktMTFWOS41WiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTIgMTYuMiAxNSAxOS4yIDIwLjUgMTIuOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIuMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+Cg==">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BidGate">
+<meta property="og:title" content="BidGate — Go/No-Go Bid Qualification">
+<meta property="og:description" content="Go / no-go bid qualification for flooring, tile and specialty-surface subcontractors. Gates before scores, expected value with uncertainty, materials & installation risk, and a calibration loop. Local-first — nothing leaves your browser.">
+<meta property="og:image" content="https://nathantaylorops.github.io/bidgate/assets/score.png">
+<meta property="og:url" content="https://nathantaylorops.github.io/bidgate/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BidGate — Go/No-Go Bid Qualification">
+<meta name="twitter:description" content="Go / no-go bid qualification for flooring, tile and specialty-surface subcontractors. Gates before scores, expected value with uncertainty, materials & installation risk, and a calibration loop.">
+<meta name="twitter:image" content="https://nathantaylorops.github.io/bidgate/assets/score.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "BidGate",
+  "description": "Go / no-go bid qualification for flooring, tile and specialty-surface subcontractors. Gates before scores, expected value with uncertainty, materials & installation risk, and a calibration loop.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Any (runs entirely in the browser)",
+  "url": "https://nathantaylorops.github.io/bidgate/",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Nathan Taylor" }
+}
+</script>
 <script src="./vendor/chart.umd.min.js"></script>
 <style>
 /* ═══════════════════════ TOKENS ═══════════════════════ */
 :root{
   --bg:#f3f4f8; --surface:#ffffff; --surface2:#f7f8fb; --surface3:#eceef4; --border:#d9dce6; --border2:#c4c8d6;
-  --text:#171a26; --text2:#4a4f63; --muted:#7a8098;
+  --text:#171a26; --text2:#4a4f63; --muted:#5b6178;
   --accent:#2f4a8a; --accent-ink:#ffffff; --accent-lo:rgba(47,74,138,.10);
   /* Okabe–Ito semantic palette — colour-blind safe, always paired with icon + word */
-  --good:#009E73; --good-lo:rgba(0,158,115,.12);
-  --mid:#0072B2;  --mid-lo:rgba(0,114,178,.12);
-  --warn:#E69F00; --warn-lo:rgba(230,159,0,.14);
-  --bad:#D55E00;  --bad-lo:rgba(213,94,0,.12);
+  --good:#009E73; --good-lo:rgba(0,158,115,.12); --good-ink:#00805c;
+  --mid:#0072B2;  --mid-lo:rgba(0,114,178,.12); --mid-ink:#006ba8;
+  --warn:#E69F00; --warn-lo:rgba(230,159,0,.14); --warn-ink:#8a6000;
+  --bad:#D55E00;  --bad-lo:rgba(213,94,0,.12); --bad-ink:#b34d00;
   --s1:#D55E00; --s2:#E69F00; --s3:#8f96ad; --s4:#56B4E9; --s5:#009E73;
   --font:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
   --r:6px; --r-lg:10px; --shadow:0 1px 2px rgba(20,24,40,.06),0 6px 20px rgba(20,24,40,.06);
@@ -26,13 +50,13 @@
   --bg:#0f1219; --surface:#171b26; --surface2:#1d2230; --surface3:#242a3a; --border:#2a3042; --border2:#38405a;
   --text:#e7e9f1; --text2:#b4b9cc; --muted:#7f869e; --accent:#7c9cf0; --accent-ink:#0b1020; --accent-lo:rgba(124,156,240,.14);
   --good-lo:rgba(0,158,115,.18); --mid-lo:rgba(0,114,178,.18); --warn-lo:rgba(230,159,0,.18); --bad-lo:rgba(213,94,0,.18);
-  --s3:#6b7391; --shadow:inset 0 1px 0 rgba(255,255,255,.045),0 2px 6px rgba(0,0,0,.35);
+  --good-ink:var(--good); --mid-ink:var(--mid); --warn-ink:var(--warn); --bad-ink:var(--bad); --s3:#7a81a0; --shadow:inset 0 1px 0 rgba(255,255,255,.045),0 2px 6px rgba(0,0,0,.35);
 }}
 :root[data-theme="dark"]{
   --bg:#0f1219; --surface:#171b26; --surface2:#1d2230; --surface3:#242a3a; --border:#2a3042; --border2:#38405a;
   --text:#e7e9f1; --text2:#b4b9cc; --muted:#7f869e; --accent:#7c9cf0; --accent-ink:#0b1020; --accent-lo:rgba(124,156,240,.14);
   --good-lo:rgba(0,158,115,.18); --mid-lo:rgba(0,114,178,.18); --warn-lo:rgba(230,159,0,.18); --bad-lo:rgba(213,94,0,.18);
-  --s3:#6b7391; --shadow:inset 0 1px 0 rgba(255,255,255,.045),0 2px 6px rgba(0,0,0,.35);
+  --good-ink:var(--good); --mid-ink:var(--mid); --warn-ink:var(--warn); --bad-ink:var(--bad); --s3:#7a81a0; --shadow:inset 0 1px 0 rgba(255,255,255,.045),0 2px 6px rgba(0,0,0,.35);
 }
 
 /* ═══════════════════════ BASE ═══════════════════════ */
@@ -64,8 +88,8 @@ h1,h2,h3{text-wrap:balance;letter-spacing:-.01em}
 .nav button:hover{background:var(--surface3)}
 .nav button[aria-current="page"]{background:var(--surface);border-color:var(--border);color:var(--text);box-shadow:var(--shadow)}
 .nav .badge{font-family:var(--mono);font-size:.68rem;padding:0 6px;border-radius:99px;background:var(--surface3);color:var(--muted)}
-.nav .badge.bad{background:var(--bad-lo);color:var(--bad)}
-.nav .badge.good{background:var(--good-lo);color:var(--good)}
+.nav .badge.bad{background:var(--bad-lo);color:var(--bad-ink)}
+.nav .badge.good{background:var(--good-lo);color:var(--good-ink)}
 
 .grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
 @media (max-width:960px){.grid{grid-template-columns:1fr}.side{position:static!important}}
@@ -118,16 +142,16 @@ select.btn{padding-right:24px}
 .verdict.neutral{border-style:dashed;border-color:var(--border2);background:var(--surface2)}
 .verdict .eyebrow{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted)}
 .verdict .title{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:4px 0 6px;display:flex;align-items:center;gap:8px}
-.verdict.good .title{color:var(--good)} .verdict.mid .title{color:var(--mid)} .verdict.warn .title{color:var(--warn)} .verdict.bad .title{color:var(--bad)} .verdict.neutral .title{color:var(--muted)}
+.verdict.good .title{color:var(--good-ink)} .verdict.mid .title{color:var(--mid-ink)} .verdict.warn .title{color:var(--warn-ink)} .verdict.bad .title{color:var(--bad-ink)} .verdict.neutral .title{color:var(--muted)}
 .verdict .why{font-size:.82rem;color:var(--text2)}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px}
 .kpi .v{font-family:var(--mono);font-size:1.15rem;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
 .kpi .l{font-size:.68rem;color:var(--muted);margin-top:2px}
 .gatelist{margin-top:10px;display:flex;flex-direction:column;gap:4px}
-.gatelist .g{display:flex;gap:6px;align-items:flex-start;font-size:.8rem;color:var(--bad)}
+.gatelist .g{display:flex;gap:6px;align-items:flex-start;font-size:.8rem;color:var(--bad-ink)}
 .pill{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:99px;font-size:.72rem;font-weight:600;border:1px solid transparent}
-.pill.good{background:var(--good-lo);color:var(--good)} .pill.mid{background:var(--mid-lo);color:var(--mid)} .pill.warn{background:var(--warn-lo);color:var(--warn)} .pill.bad{background:var(--bad-lo);color:var(--bad)} .pill.neutral{background:var(--surface3);color:var(--text2)}
+.pill.good{background:var(--good-lo);color:var(--good-ink)} .pill.mid{background:var(--mid-lo);color:var(--mid-ink)} .pill.warn{background:var(--warn-lo);color:var(--warn-ink)} .pill.bad{background:var(--bad-lo);color:var(--bad-ink)} .pill.neutral{background:var(--surface3);color:var(--text2)}
 
 /* ═══════════════════════ SCORING ═══════════════════════ */
 .group{margin-bottom:12px}
@@ -141,7 +165,7 @@ select.btn{padding-right:24px}
 .crit .name{font-weight:600;font-size:.88rem;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .crit .tags{display:flex;gap:4px}
 .crit .tag{font-size:.66rem;padding:0 6px;border-radius:99px;border:1px solid var(--border2);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-.crit .tag.gate{border-color:var(--bad);color:var(--bad)} .crit .tag.floor{border-color:var(--warn);color:var(--warn)}
+.crit .tag.gate{border-color:var(--bad);color:var(--bad-ink)} .crit .tag.floor{border-color:var(--warn);color:var(--warn-ink)}
 .anchors{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0;font-size:.74rem;color:var(--text2)}
 .anchors div b{display:block;font-family:var(--mono);color:var(--muted);font-weight:600}
 @media (max-width:640px){.anchors{grid-template-columns:1fr}}
@@ -149,7 +173,7 @@ select.btn{padding-right:24px}
 .radio button{border:1px solid var(--border2);background:var(--surface);border-radius:var(--r);padding:6px 0;font-family:var(--mono);font-weight:600;font-size:.9rem;color:var(--muted);transition:all .1s}
 .radio button:hover{border-color:var(--accent);color:var(--accent)}
 .radio button[aria-checked="true"]{color:#fff;border-color:transparent}
-.radio button[aria-checked="true"].s1{background:var(--s1)} .radio button[aria-checked="true"].s2{background:var(--s2);color:#1a1200} .radio button[aria-checked="true"].s3{background:var(--s3)} .radio button[aria-checked="true"].s4{background:var(--s4);color:#06202e} .radio button[aria-checked="true"].s5{background:var(--s5)}
+.radio button[aria-checked="true"].s1{background:var(--s1);color:#2b0f00} .radio button[aria-checked="true"].s2{background:var(--s2);color:#1a1200} .radio button[aria-checked="true"].s3{background:var(--s3);color:#1c2030} .radio button[aria-checked="true"].s4{background:var(--s4);color:#06202e} .radio button[aria-checked="true"].s5{background:var(--s5);color:#062017}
 .crit .note{margin-top:8px}
 .crit .note input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:5px 8px;font-size:.8rem}
 .crit .evidence{font-size:.7rem;color:var(--muted);margin-top:6px;font-style:italic}
@@ -220,7 +244,7 @@ footer{margin-top:28px;font-size:.72rem;color:var(--muted);text-align:center;lin
 </head>
 <body>
 <div class="app wrap" id="app">
-  <div class="topbar">
+  <header class="topbar">
     <div class="brand">
       <h1>BidGate</h1>
       <span class="tag">Go / no-go for flooring &amp; specialty-surface subcontractors</span>
@@ -233,7 +257,7 @@ footer{margin-top:28px;font-size:.72rem;color:var(--muted);text-align:center;lin
       </div>
       <button class="btn ghost" id="themeBtn" title="Toggle theme" aria-label="Toggle theme" aria-pressed="false"></button>
     </div>
-  </div>
+  </header>
 
   <nav class="nav" id="nav" aria-label="Views"></nav>
 
@@ -248,8 +272,10 @@ footer{margin-top:28px;font-size:.72rem;color:var(--muted);text-align:center;lin
   </footer>
 </div>
 
-<div id="memo"></div>
-<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="memo" role="region" aria-label="Printable decision memo"></div>
+<div id="toast-region" role="region" aria-label="Notifications">
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
 
 <script type="module" src="./src/ui/app.js"></script>
 </body>

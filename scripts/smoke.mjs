@@ -3,11 +3,12 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
 let chromium;
 try { ({ chromium } = require('playwright')); } catch { console.error('playwright not found — npm i -D playwright'); process.exit(2); }
 
-const root = path.resolve(new URL('..', import.meta.url).pathname);
+const root = fileURLToPath(new URL('..', import.meta.url));
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.md': 'text/markdown', '.svg': 'image/svg+xml', '.png': 'image/png' };
 const server = http.createServer((req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);
@@ -77,8 +78,35 @@ const chartCount = await page.evaluate(() => window.Chart?.__instances?.length ?
 console.log('live chart instances on last view:', chartCount);
 console.log('verdict after keys:', side);
 console.log('mobile horizontal scroll:', hscroll);
+
+// Accessibility: axe-core against the score view (desktop, light mode) — the
+// primary view most visitors land on. Only serious/critical violations fail
+// the build; moderate/minor ones are logged so they're visible without
+// blocking every PR on a color-contrast nit.
+await page.setViewportSize({ width: 1280, height: 900 });
+await page.emulateMedia({ media: 'screen' });
+await page.click('#themeBtn'); // back to light, since the dark-mode pass above left it toggled
+await page.click('#nav button[data-view="score"]');
+await page.waitForTimeout(300);
+let axeResults = { violations: [] };
+try {
+  await page.addScriptTag({ path: require.resolve('axe-core') });
+  axeResults = await page.evaluate(async () => await window.axe.run());
+} catch (e) {
+  console.log('axe-core not available — run `npm i -D axe-core` to enable the accessibility check:', e.message);
+}
+const seriousOrWorse = axeResults.violations.filter(v => v.impact === 'serious' || v.impact === 'critical');
+console.log('accessibility violations (serious/critical):', seriousOrWorse.length, '— total including minor/moderate:', axeResults.violations.length);
+for (const v of axeResults.violations) {
+  console.log(`  [${v.impact}] ${v.id}: ${v.help} (${v.nodes.length} node(s))`);
+  for (const n of v.nodes) {
+    console.log(`      target: ${JSON.stringify(n.target)}`);
+    console.log(`      ${(n.failureSummary || '').replace(/\n/g, ' | ')}`);
+  }
+}
+
 console.log('errors:', errors.length);
 for (const e of errors) console.log('  ', e);
 await browser.close();
 server.close();
-process.exit(errors.filter(e => !e.includes('[warning]')).length ? 1 : 0);
+process.exit(errors.filter(e => !e.includes('[warning]')).length || seriousOrWorse.length ? 1 : 0);

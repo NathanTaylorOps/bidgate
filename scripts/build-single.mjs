@@ -5,8 +5,12 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(new URL('..', import.meta.url).pathname);
+// fileURLToPath (not new URL(...).pathname) so this resolves correctly on Windows too —
+// .pathname on a file:// URL yields a leading-slash path like "/C:/Users/..." which
+// path.resolve() then doubles into "C:\C:\Users\...".
+const root = fileURLToPath(new URL('..', import.meta.url));
 const entry = 'src/ui/app.js';
 const modules = new Map(); // key → source
 
