@@ -73,7 +73,15 @@ src/engine/ev.js           expected value, levies (unused in current US-only pre
 src/engine/capacity.js     peak cash, portfolio retention/AR overlap, capacity gates
 src/engine/montecarlo.js   beta-PERT, seeded RNG, quantiles, histogram
 src/engine/calibration.js  Brier, Murphy, reliability bins, hit rates, criterion separation
-src/ui/*.js                views (score, gates, economics, capacity & materials, decision, pipeline, calibration, settings), charts, state, memo
+src/engine/assess.js       one assessment path (gates → score → P(win) → EV → capacity → band) shared by
+                           the live editor, the sample loader and the pipeline, plus the frozen pipeline record
+src/ui/app.js              boot, routing between views, print memo
+src/ui/views-decide.js     score, gates, decision (tornado, weakest links, pre-mortem) views
+src/ui/views-econ.js       economics, capacity & materials, pipeline, calibration views
+src/ui/views-weights.js    settings (direct / swing / AHP weighting)
+src/ui/charts.js           Chart.js wrappers (tornado, reliability diagram, Monte Carlo histogram)
+src/ui/state.js            persistence: localStorage, URL-fragment share/import, JSON export
+src/ui/icons.js            inline SVG icon set (Okabe-Ito RAG, dual-encoded with icon + word)
 samples/samples.js         three synthetic bids
 tests/engine.test.js       43 tests, node:test, zero dependencies
 scripts/build-single.mjs   emits dist/bidgate.html — every module inlined via an import map
