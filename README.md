@@ -130,6 +130,8 @@ I built a bid-qualification calculator there that scored relationship strength, 
 
 I reused engine and testing infrastructure I'd already built and validated on an earlier go/no-go tool, then did the domain redesign specifically for this niche: the 42 criteria, the gates, the weights, the presets. Full history is in [docs/METHODOLOGY.md](docs/METHODOLOGY.md).
 
+Before publishing, BidGate went in front of two operations and logistics managers based in Australia, who validated the use case and asked for flexible data import and export so a bid could move in and out of their own systems. The JSON export/import and URL-fragment sharing are a direct answer to that request.
+
 I use AI the same way at work: I own the domain model, the assumptions and what ships; the AI does research synthesis and code. Built with Claude as a pair on this one, research synthesis across roughly 150 sources, engine design and test scaffolding. Every formula, threshold and weight has a source or is labelled as a judgement call. All sample data is synthetic; no employer data, prices or projects appear anywhere in this repository.
 
 This is one piece of a small portfolio of tools built from operations work rather than tutorials: qualifying flooring/tile bids to GCs here, catching job-cost and schedule risk on live builds in [job-cost-risk-dashboard](https://github.com/NathanTaylorOps/job-cost-risk-dashboard), running field operations for a custom-home GC in [resource-scheduling-tracking-system](https://github.com/NathanTaylorOps/resource-scheduling-tracking-system), and GM-level scenario modeling in [scenario-sensitivity-engine](https://github.com/NathanTaylorOps/scenario-sensitivity-engine).
