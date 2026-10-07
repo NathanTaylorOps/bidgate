@@ -1,9 +1,11 @@
-# Research briefs
+# Research provenance
 
-Three research threads run before the tool's design (September 2026), each flagging vendor marketing vs. evidence. They are the provenance for the criteria library, weights, formulas and presets. They were written against an earlier scorecard, before the domain was rescoped to a US flooring / tile / specialty-surface subcontractor bidding to GCs; the market and academic findings are domain-general, and each brief's header notes which of its items were dropped in the rescope.
+These briefs document the research used to challenge and refine BidGate's criteria, assumptions, decision methods and interface. They are supporting material rather than the operating narrative of the project.
 
-1. `01_competitive_landscape.md` — what 25 commercial tools and frameworks actually do (and don't)
-2. `02_academic_models_pwin_capacity.md` — bid/no-bid literature 1988–2024; Friedman/Gates; cost-to-bid benchmarks; capacity & cash
-3. `03_decision_science_ux_reporting.md` — MCDA rigour, bias counters, UX spec
+The research was completed in September 2026 and distinguishes vendor claims from independent evidence where relevant. It predates the final scope of BidGate as a US flooring, tile and specialty-surface subcontractor pursuit-governance system, so each brief should be read with the current [Methodology](../METHODOLOGY.md) and [Limitations](../LIMITATIONS.md).
 
-Two further briefs from the same round (a vertically-integrated builder's shop-loading module; Australian regulatory constants) were retired with the rescope and are not included.
+1. `01_competitive_landscape.md` — review of commercial tools and decision frameworks.
+2. `02_academic_models_pwin_capacity.md` — bid/no-bid research, probability-of-win approaches, pursuit cost, capacity and cash.
+3. `03_decision_science_ux_reporting.md` — decision methods, bias controls and reporting/interface considerations.
+
+Research relating to modules removed during rescoping is intentionally not included. The current application, methodology and tests remain the source of truth for what BidGate actually implements.
