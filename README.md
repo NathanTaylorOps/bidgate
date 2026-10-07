@@ -128,7 +128,11 @@ For a quick review of the project:
 5. Open **Pipeline** and **Calibration** to see how the decision record closes the loop after the outcome is known.
 6. Review the **[one-page decision memo](assets/memo.pdf)** for the management output rather than the software interface.
 
+### Supporting evidence: structured assessment
+
 ![BidGate score view](assets/score.png)
+
+The Score view is supporting evidence rather than the hero: it exposes the structured inputs behind the recommendation while keeping attractiveness and winnability distinct.
 
 ## Governance principles
 
