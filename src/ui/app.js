@@ -108,7 +108,7 @@ export function renderSide() {
   else if (band.id === 'GO') why = 'Strong fit against the current criteria. Confirm assumptions and review the pre-mortem before committing estimating hours.';
   else if (band.id === 'APPROVAL') why = 'Proceed only with a named approver and conditions recorded.';
   else if (band.id === 'CONDITIONAL') why = 'Identify the weakest links and what would flip this before spending on the bid.';
-  else why = 'Insufficient alignment. Decline or seek further information.';
+  else why = 'Current evidence does not support pursuit. Decline or resolve the material gaps before reconsidering.';
 
   $('#side').innerHTML = `
     <div class="verdict ${tone}" aria-live="polite">
