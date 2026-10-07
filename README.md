@@ -72,9 +72,9 @@ The system does not make the management decision. It makes the assumptions, cons
 | Senior approval can be informal or unclear. | Routine, conditional, exceptional and override decisions have explicit ownership. |
 | Won/lost outcomes are discussed but rarely recalibrate the process. | Forecasts are frozen, outcomes recorded and judgement reviewed against reality. |
 
-## What this project demonstrates
+## Operating approach
 
-For me, the value of this project is not the web application itself. It demonstrates how I approach an operating problem:
+The application is the implementation layer. The underlying operating approach is:
 
 - **Commercial discipline** — qualify revenue rather than treating all pipeline value as equally desirable.
 - **Risk governance** — separate true deal-breakers from risks that can be traded against return.
@@ -117,9 +117,7 @@ A useful pursuit review needs to answer more than “is this a good job?”
 | Who decided, and why? | Approval conditions, overrides and decision records preserve accountability. |
 | Are our judgements improving? | Won/lost outcomes and actual margin feed a calibration view. |
 
-## A 90-second review
-
-For a quick review of the project:
+## Walk through the decision process
 
 1. **Open the [live demo](https://NathanTaylorOps.github.io/bidgate/).** Six synthetic bids show different decision states.
 2. On **Score**, change **GC / project funding verified** to 1. A hard commercial failure gates the opportunity regardless of the total score.
