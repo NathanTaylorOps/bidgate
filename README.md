@@ -24,9 +24,49 @@ In practice, those decisions are often spread across experience, spreadsheets an
 
 BidGate turns that judgement into a visible decision process:
 
-**Opportunity → hard gates → attractiveness & winnability → economics → cash & capacity → uncertainty → approval decision → outcome → calibration**
+```text
+OPPORTUNITY
+    │
+    ▼
+HARD GATES ─────────────── fail ──────────────► NO-GO / EXCEPTION
+    │ pass                                        │
+    ▼                                             │ authorised override
+ATTRACTIVENESS + WINNABILITY                      │
+    │                                             │
+    ▼                                             │
+ECONOMICS ── margin · P(win) · pursuit cost · EV  │
+    │                                             │
+    ▼                                             │
+CASH + CAPACITY ── funding · backlog · resources  │
+    │                                             │
+    ▼                                             │
+UNCERTAINTY ── sensitivity · switching · ranges   │
+    │                                             │
+    ▼                                             │
+MANAGEMENT DECISION ◄─────────────────────────────┘
+    │
+    ▼
+OUTCOME ── won / lost / withdrawn · actual margin
+    │
+    ▼
+CALIBRATION ── compare forecast with reality
+    │
+    └────────────────────────► improve assumptions and thresholds
+```
 
 The system does not make the management decision. It makes the assumptions, constraints and reasons behind that decision easier to inspect, challenge and record.
+
+### From judgement in the room to a repeatable operating process
+
+| Typical pursuit process | Governed pursuit process |
+|---|---|
+| Opportunities enter the estimating queue with inconsistent screening. | Opportunities are screened before scarce estimating effort is committed. |
+| Commercial risks can be buried inside an overall impression or score. | Non-negotiable gates are separated from compensating factors. |
+| Revenue and headline margin dominate the conversation. | Return is considered alongside win probability, pursuit cost, cash and capacity. |
+| Capacity is checked after the business is already invested in the pursuit. | Estimating, delivery and working-capital constraints are visible before commitment. |
+| Assumptions live across spreadsheets, inboxes and meetings. | Material assumptions and evidence sit with the decision record. |
+| Senior approval can be informal or unclear. | Routine, conditional, exceptional and override decisions have explicit ownership. |
+| Won/lost outcomes are discussed but rarely recalibrate the process. | Forecasts are frozen, outcomes recorded and judgement reviewed against reality. |
 
 ## What this project demonstrates
 
