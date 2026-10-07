@@ -22,7 +22,7 @@ Stage 2  SCORE        weighted mean of group means, two axes:
 Stage 3  FLOOR        any `floor` criterion ≤ 2 caps the verdict at CONDITIONAL
 ```
 
-Bands on attractiveness: **≥ 75 GO · 60–74 GO WITH APPROVAL · 40–59 CONDITIONAL · < 40 NO-GO.** The middle band is a *routed state* — approver, conditions, date — not just "amber" (pattern from Deltek Vantagepoint's Go / Go-with-management-approval / No-Go).
+Bands on attractiveness: **≥ 75 GO · 60–74 GO WITH APPROVAL · 40–59 CONDITIONAL · < 40 NO-GO.** The middle band is a *routed state* — approver, conditions and date — rather than an informational "amber" score. The operating principle is that a conditional commercial decision needs explicit ownership and conditions.
 
 Gates are conjunctive screening in the Gilbride & Allenby (2004) sense: an alternative must pass every must-have before compensatory evaluation applies. Which criteria carry gates follows the evidence on what actually sinks subcontractors — gates: funding, litigation propensity, project-type experience, pay-if-paid, LD, consequential damages, indemnity, estimating capacity; floors (cap at CONDITIONAL): payment terms, retainage, scope clarity.
 
