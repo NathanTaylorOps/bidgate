@@ -14,7 +14,7 @@ It combines hard commercial gates, bid attractiveness, probability of win, margi
 
 ![BidGate decision view](assets/decision.png)
 
-> **For hiring managers and recruiters:** the [management case study](docs/CASE_STUDY.md) is the fastest way to see the operating problem, decision logic, implementation approach and results behind the project.
+> The [management case study](docs/CASE_STUDY.md) connects the operating problem, decision logic, implementation approach and results behind the project.
 
 ## Why this exists
 
