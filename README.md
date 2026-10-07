@@ -12,7 +12,11 @@ It combines hard commercial gates, bid attractiveness, probability of win, margi
 
 [![CI](https://github.com/NathanTaylorOps/bidgate/actions/workflows/ci.yml/badge.svg)](https://github.com/NathanTaylorOps/bidgate/actions/workflows/ci.yml) [![licence](https://img.shields.io/badge/licence-MIT-8f96ad)](LICENSE)
 
+### Decision view
+
 ![BidGate decision view](assets/decision.png)
+
+The primary screenshot is the **Decision** view because the central output is a management decision with visible drivers, conditions and uncertainty.
 
 > The [management case study](docs/CASE_STUDY.md) connects the operating problem, decision logic, implementation approach and results behind the project.
 
