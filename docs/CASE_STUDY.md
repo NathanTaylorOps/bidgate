@@ -68,7 +68,29 @@ This separation is the core design choice.
 
 The operating flow is:
 
-**Opportunity → hard gates → attractiveness & winnability → economics → cash & capacity → uncertainty → approval decision → outcome → calibration**
+```text
+Opportunity
+   │
+   ▼
+Hard gates ──► exception / NO-GO
+   │ pass
+   ▼
+Attractiveness + winnability
+   ▼
+Economics
+   ▼
+Cash + capacity
+   ▼
+Uncertainty
+   ▼
+Management decision
+   ▼
+Outcome
+   ▼
+Calibration ──► improve assumptions and thresholds
+```
+
+The sequence matters: commercial eligibility is tested before an attractive weighted assessment can influence the decision, and the learning loop begins only after the original forecast has been preserved.
 
 ### Hard gates
 
