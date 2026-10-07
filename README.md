@@ -222,7 +222,7 @@ Known modelling and implementation limits are documented rather than hidden: [do
 
 Potential next steps include blind multi-rater scoring, portfolio optimisation across simultaneous pursuits, company-specific retention history and—only after enough decided outcomes exist—an interpretable fitted model alongside management-set weights.
 
-An AI-assisted tender review could also propose scores from cited tender evidence, but it should remain draft support: **AI should not clear a hard gate or make the pursuit decision.**
+A future tender-evidence assistant could propose draft scores against cited source material, but it should remain review support: **automated analysis should not clear a hard gate or make the pursuit decision.**
 
 ## Related operations projects
 
