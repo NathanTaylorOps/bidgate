@@ -14,7 +14,7 @@
  *           Any criterion with `floor` scored ≤ floor.at caps the verdict at CONDITIONAL.
  *
  * Verdict bands (attractiveness): ≥ 75 GO · 60–74 GO WITH APPROVAL · 40–59 CONDITIONAL · < 40 NO-GO.
- * The 60–74 band is a routed state (Deltek Vantagepoint pattern), not just "amber".
+ * The 60–74 band is a routed state with explicit approval ownership and conditions, not just an informational "amber" score.
  *
  * COVERAGE. No verdict band is issued while any gate criterion is unscored, or while weighted coverage
  * (see VERDICT_COVERAGE_MIN in criteria.js) is below the threshold: the band is INCOMPLETE and the result
