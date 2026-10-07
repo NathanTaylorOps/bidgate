@@ -1,145 +1,196 @@
 # BidGate
 
-**Go / no-go bid qualification for flooring, tile & specialty-surface subcontractors.**
+**Commercial bid governance and pursuit decision support for specialty contractors.**
 
-> Live demo → [NathanTaylorOps.github.io/bidgate](https://NathanTaylorOps.github.io/bidgate/) · Single file → [`dist/bidgate.html`](dist/bidgate.html) (download, open, works offline)
+BidGate helps answer a management question that sits upstream of estimating:
 
-[![CI](https://github.com/NathanTaylorOps/bidgate/actions/workflows/ci.yml/badge.svg)](https://github.com/NathanTaylorOps/bidgate/actions/workflows/ci.yml) ![deps](https://img.shields.io/badge/runtime%20deps-Chart.js%20only-0072B2) ![build](https://img.shields.io/badge/build-none-8f96ad) [![licence](https://img.shields.io/badge/licence-MIT-8f96ad)](LICENSE)
+> **Should we commit scarce estimating, working-capital and delivery capacity to this opportunity — and what would change the answer?**
 
-![BidGate score view](assets/score.png)
+It combines hard commercial gates, bid attractiveness, probability of win, margin and expected value, cash exposure, delivery capacity, uncertainty and an auditable approval record. It is a portfolio project built from operating experience, not a claim of production deployment.
 
-<details>
-<summary>Decision view (sensitivity tornado, weakest links, pre-mortem) and a printed memo</summary>
+**[Open the live demo](https://NathanTaylorOps.github.io/bidgate/)** · **[View an example one-page decision memo](assets/memo.pdf)** · **[Read the methodology](docs/METHODOLOGY.md)**
+
+[![CI](https://github.com/NathanTaylorOps/bidgate/actions/workflows/ci.yml/badge.svg)](https://github.com/NathanTaylorOps/bidgate/actions/workflows/ci.yml) [![licence](https://img.shields.io/badge/licence-MIT-8f96ad)](LICENSE)
 
 ![BidGate decision view](assets/decision.png)
 
-A one-page memo (economics, full scorecard, decision record) prints straight from the app. See [`assets/memo.pdf`](assets/memo.pdf) for an example.
+## Why this exists
 
-</details>
+A bid is not just an estimating task. Pursuing it consumes **management attention, estimating capacity, working capital and future delivery capacity** before the business knows whether it will win the work.
 
----
+In practice, those decisions are often spread across experience, spreadsheets and meetings. A single weighted score can also hide the reason a job should not be pursued: an attractive margin should not compensate for unverified funding, unacceptable contract terms or a business that cannot resource the work.
 
-## The problem
+BidGate turns that judgement into a visible decision process:
 
-A flooring, tile or specialty-surface subcontractor lives or dies on which packages it chooses to bid to general contractors. Most bid/no-bid decisions are a gut call in a Monday meeting; the ones that use a spreadsheet use a weighted sum of 1–5 scores, which lets a great margin "pay for" a GC who cannot pay, hides all uncertainty behind one number, and is never checked against what actually happened.
+**Opportunity → hard gates → attractiveness & winnability → economics → cash & capacity → uncertainty → approval decision → outcome → calibration**
 
-Nothing on the market fixes this. Procore, Buildertrend, JobTread and the rest distribute bids; they do not qualify them. The two AEC CRMs with a real go/no-go module (Unanet, Deltek) are "build it yourself" forms behind enterprise pricing. Nobody ships outcome calibration. Nobody models the position of a specialty-trade subcontractor bidding to a GC, as distinct from a general contractor's own prime-contract risk.
+The system does not make the management decision. It makes the assumptions, constraints and reasons behind that decision easier to inspect, challenge and record.
 
-## What BidGate does differently
+## What this project demonstrates
 
-| | Typical scorecard | BidGate |
-|---|---|---|
-| Deal-killers | a low score, averaged away | **gates evaluated first**: non-compensatory, verdict is NO-GO (gated) whatever the total |
-| Criteria | 8–15 vague labels | **42 criteria with behavioural anchors** at 1 / 3 / 5, sourced to the literature |
-| One number | yes | **two axes**: attractiveness (want it?) and winnability (can win it?), plotted as a 2×2 |
-| Weights | typed in | direct, **swing weighting**, or **AHP** with a consistency ratio |
-| Uncertainty | none | **tornado**, switching values in words, weight-robustness %, **beta-PERT Monte Carlo** on margin, value and P(win) |
-| P(win) | a guess | route base rate with **empirical-Bayes shrinkage** toward your own record, competitor scaling, position shift, **Friedman & Gates** price curves |
-| Cash | ignored | **peak negative cash** for the job and **retention/AR exposure overlap** across your live jobs vs cash + credit line |
-| Subcontractor position | ignored | **pay-if-paid vs pay-when-paid, flow-down clauses, retainage release timing, Miller Act / mechanics-lien rights** scored as their own gated criteria, not a general contractor's own contract risk |
-| Materials & installation | ignored | **installer certification, material price/lead-time volatility, moisture-testing/QC documentation, callback exposure by failure mode** (moisture delamination, grout/tile cracking, turf seam failure) |
-| After the decision | nothing | **calibration loop**: Brier score, reliability diagram, hit rate by count and value, which criteria separate wins from losses, human override rate |
-| Output | a number | **one-page printable decision memo** with gates, anchors met, economics, pre-mortem and signatures |
-| Markets | one | presets for **Multi-Family / Apartment Flooring & Tile**, **Commercial TI Flooring & Tile**, **Specialty Surfaces (Athletic / Turf)**, US-only, no regulatory-preset machinery |
+For me, the value of this project is not the web application itself. It demonstrates how I approach an operating problem:
 
-Everything runs in the browser. Nothing is sent anywhere. Bids persist in localStorage; export/import as JSON; share one bid via a URL fragment.
+- **Commercial discipline** — qualify revenue rather than treating all pipeline value as equally desirable.
+- **Risk governance** — separate true deal-breakers from risks that can be traded against return.
+- **Resource allocation** — consider estimating workload, delivery capacity and working-capital exposure before committing.
+- **Decision rights** — distinguish GO, management approval, conditional and NO-GO states and preserve the reason for an override.
+- **Decision-making under uncertainty** — show sensitivity and ranges instead of presenting a fragile point estimate as certainty.
+- **Continuous improvement** — record outcomes and compare predictions with what actually happened.
+- **System design** — turn tacit operating knowledge into a repeatable process without hiding judgement behind a black box.
 
-## Try it in 90 seconds
+## Operating origin and results
 
-1. Open the live demo. Six synthetic sample bids load, including a GO, a gated NO-GO, and a CONDITIONAL.
-2. On **Score**, focus a criterion and press `1`–`5`. Press `?` for the anchors. Watch the verdict panel.
-3. Set **GC / project funding verified** to 1. The verdict gates regardless of everything else. That is the point.
-4. Open **Decision** for the tornado and "what would flip this". Open **Economics** for P(win), EV and the Monte Carlo. Open **Capacity & Materials** for cash exposure, estimating/crew load and a read-out of the Materials & Installation scores.
-5. **Print memo**: one page for the bid committee.
-6. Later, on **Pipeline**, record won / lost and the actual margin. **Calibration** tells you whether the tool is any good.
+The project is an expanded portfolio version of a much simpler bid-qualification process I developed while working as a Project Manager and estimating lead for a commercial flooring and tile contractor. I was involved in packages of roughly **US$100K–US$4M per discipline** and ran/audited a three-person commercial estimating team.
 
-## Methodology
+The operating process used practical qualification factors including client relationship, historical win record, payment risk, scope clarity, relevant experience, estimating workload, deal size, margin and competitive intensity. In that environment, the broader estimating improvements delivered:
 
-Full write-up with sources: [docs/METHODOLOGY.md](docs/METHODOLOGY.md). In one paragraph:
+| Operating result | Outcome |
+|---|---:|
+| Estimating rework | **30% reduction** |
+| Average margin | **8% improvement** |
+| Major-bid throughput | **from roughly one every two weeks to 2–4 per week** |
+| Small-bid turnaround | **from 2–4 days to hours–1 day** |
+| Qualified bids | **majority won** |
 
-Gates are conjunctive screening (Gilbride & Allenby 2004). Group weights default to the pooled evidence in a 24-study meta-analysis of bid/no-bid factors (payment terms, client solvency and payment history rank highest, applied one contract tier down to GC payment behaviour toward subs) and are configurable by swing weighting or AHP (Saaty). Win probability shrinks a route base rate toward your own record (Beta-Binomial, α = 10), scales by 1/(n+1) for competitors, shifts on the logit scale for competitive position, and shows Friedman/Gates curves for hard bids. Monte Carlo uses beta-PERT three-point inputs. Peak cash uses a first-principles S-curve approximation and a lightweight retention/AR-exposure overlap across concurrent jobs (Elazouni 2009). Subcontractor-specific contract risk (pay-if-paid vs pay-when-paid, Miller Act / mechanics-lien rights, flow-down and retainage) replaces prime-contract risk. Calibration reports Brier score with Murphy decomposition on 5 bins. Every threshold is a labelled, dated default, not a standard.
+Those results belong to the operating process and team in which the original calculator was used; they are **not claims that this portfolio application itself produced those results**.
 
-## Architecture
+BidGate asks what that original process should look like if the decision logic were made explicit, tested, auditable and capable of learning from outcomes.
 
-```
-index.html                 shell + CSS; loads src/ui/app.js as an ES module (no build step)
-src/data/criteria.js       42 criteria, anchors, gates, contexts, evidence pointers
-src/data/presets.js        3 presets: weights, locale, economics, capacity gates (dated)
-src/data/dealkillers.js    manual deal-killers per preset; mitigation library
-src/engine/scoring.js      gates → compensatory score (two axes) → floor; sensitivity; robustness
-src/engine/weights.js      swing weighting; AHP with consistency ratio and worst-cell finder
-src/engine/pwin.js         base-rate shrinkage, competitor & position adjustment, Friedman/Gates
-src/engine/ev.js           expected value, levies (unused in current US-only presets), bid cost, break-even, pursuit ratio
-src/engine/capacity.js     peak cash, portfolio retention/AR overlap, capacity gates
-src/engine/montecarlo.js   beta-PERT, seeded RNG, quantiles, histogram
-src/engine/calibration.js  Brier, Murphy, reliability bins, hit rates, criterion separation
-src/engine/assess.js       one assessment path (gates → score → P(win) → EV → capacity → band) shared by
-                           the live editor, the sample loader and the pipeline, plus the frozen pipeline record
-src/ui/app.js              boot, routing between views, print memo
-src/ui/views-decide.js     score, gates, decision (tornado, weakest links, pre-mortem) views
-src/ui/views-econ.js       economics, capacity & materials, pipeline, calibration views
-src/ui/views-weights.js    settings (direct / swing / AHP weighting)
-src/ui/charts.js           Chart.js wrappers (tornado, reliability diagram, Monte Carlo histogram)
-src/ui/state.js            persistence: localStorage, URL-fragment share/import, JSON export
-src/ui/icons.js            inline SVG icon set (Okabe-Ito RAG, dual-encoded with icon + word)
-samples/samples.js         six synthetic bids
-tests/engine.test.js       43 tests, node:test, zero dependencies
-scripts/build-single.mjs   emits dist/bidgate.html; every module inlined via an import map
-scripts/smoke.mjs          headless Chromium: every view, keyboard scoring, print memo, mobile
-docs/METHODOLOGY.md        sources and formulas
-docs/adr/                  architecture decision records
-```
+## The management decision
 
-The engine is pure functions with no DOM, so it is unit-tested directly. The UI is plain DOM + Chart.js, vendored in `vendor/` and not loaded from a CDN. No framework, no bundler, no npm install.
+A useful pursuit review needs to answer more than “is this a good job?”
+
+| Management question | BidGate response |
+|---|---|
+| Is there a reason we should not pursue this at all? | Hard gates are evaluated before the score. |
+| Do we actually want the work? | Commercial attractiveness is assessed separately from ability to win. |
+| Can we win it? | Competitive position and probability of win remain visible rather than being buried in one score. |
+| Is the return worth the pursuit effort? | Margin, bid cost, expected value and break-even conditions are shown. |
+| Can the business fund and deliver it? | Working-capital exposure, live-job overlap and estimating/crew capacity are checked. |
+| How fragile is the recommendation? | Sensitivity, switching values and Monte Carlo ranges show what could change the answer. |
+| Who decided, and why? | Approval conditions, overrides and decision records preserve accountability. |
+| Are our judgements improving? | Won/lost outcomes and actual margin feed a calibration view. |
+
+## A 90-second review
+
+For a quick review of the project:
+
+1. **Open the [live demo](https://NathanTaylorOps.github.io/bidgate/).** Six synthetic bids show different decision states.
+2. On **Score**, change **GC / project funding verified** to 1. A hard commercial failure gates the opportunity regardless of the total score.
+3. Open **Decision** to see the major decision drivers, weakest links and what would change the verdict.
+4. Open **Economics** and **Capacity & Materials** to see whether an attractive opportunity also makes sense for cash and delivery.
+5. Open **Pipeline** and **Calibration** to see how the decision record closes the loop after the outcome is known.
+6. Review the **[one-page decision memo](assets/memo.pdf)** for the management output rather than the software interface.
+
+![BidGate score view](assets/score.png)
+
+## Governance principles
+
+BidGate is intentionally designed as **decision support, not automated authority**.
+
+- **Gates before scores.** A disqualifying commercial condition cannot be averaged away by attractive features elsewhere.
+- **Incomplete means incomplete.** The system does not manufacture confidence from partially scored gates.
+- **Human overrides remain possible.** The reason is recorded so management judgement is visible rather than silently replacing the model.
+- **Predictions freeze before outcomes.** Once a bid is decided, the original forecast is preserved so later calibration cannot benefit from hindsight.
+- **Defaults are assumptions, not standards.** Thresholds and weights are labelled and intended to be replaced with company evidence.
+- **Sensitive data stays local in this version.** The application uses browser storage and explicit export/share mechanisms rather than a hosted bid database.
+- **No black-box model before there is enough evidence.** The project deliberately avoids fitting a predictive model to a tiny outcome history.
+
+The detailed rationale is recorded in the [methodology](docs/METHODOLOGY.md) and [architecture decision records](docs/adr/).
+
+## How the model works
+
+BidGate evaluates an opportunity in three layers.
+
+**1. Non-negotiable gates.** Funding, contract, capacity and other must-pass conditions are checked first. A failed gate can produce a NO-GO even when the opportunity otherwise looks attractive.
+
+**2. Structured judgement.** Forty-two behaviourally anchored criteria are grouped around client/payment, project/scope, materials/installation, capacity/backlog, contract/risk, strategic value and competitive position. Attractiveness and winnability remain separate so “we want it” is not confused with “we can win it.”
+
+**3. Economics and uncertainty.** The system estimates probability of win, expected value, working-capital exposure and portfolio overlap, then shows sensitivity and uncertainty around the recommendation.
+
+The implementation includes swing weighting and AHP, empirical-Bayes updating, beta-PERT Monte Carlo analysis and outcome calibration. Those methods are deliberately kept out of the executive decision language; their assumptions, formulas and sources are documented in [METHODOLOGY.md](docs/METHODOLOGY.md).
+
+## What a real implementation would require
+
+This repository is a portfolio reference implementation. I would not put it into a live commercial environment unchanged.
+
+A production deployment would require company-specific authority limits and thresholds, authenticated users and role-based access, controlled persistent storage, audit logging, integration with CRM/estimating/ERP data, jurisdiction-specific legal review, configuration management, backup/recovery, security review, user acceptance testing and calibration against the company's own historical outcomes.
+
+The adoption process matters as much as the software: establish the existing decision baseline, agree decision rights, configure thresholds, run the system in parallel, train users, review exceptions and false signals, then progressively integrate it into the operating cadence.
+
+See **[Implementation & Governance](docs/IMPLEMENTATION.md)** and **[Limitations](docs/LIMITATIONS.md)**.
+
+## Validation and quality controls
+
+The decision engine is separated from the interface and tested as business logic. The current suite covers the scoring, gate, economics, capacity, uncertainty and calibration paths. CI runs the tests, rebuilds the standalone release, verifies that the committed build matches source and performs browser smoke tests before deployment.
+
+That matters because a decision-support system should fail visibly when its rules are broken rather than quietly changing management outcomes after a code change.
 
 ```bash
 git clone https://github.com/NathanTaylorOps/bidgate.git
 cd bidgate
-node --test            # 43 tests
-node scripts/build-single.mjs # dist/bidgate.html
-python3 -m http.server 8080   # then open http://localhost:8080  (ES modules need http://, not file://)
+node --test
+node scripts/build-single.mjs
+python3 -m http.server 8080
 ```
 
-## Design decisions
+### Repository structure
 
-Recorded as ADRs in [`docs/adr/`](docs/adr/). The short versions:
+```text
+src/data/                 criteria, presets and deal-killers
+src/engine/               scoring, weights, P(win), EV, capacity, Monte Carlo and calibration
+src/ui/                   interface, charts, state and decision views
+samples/                  synthetic demonstration bids
+tests/                    business-rule tests
+scripts/                  standalone build and browser smoke test
+docs/METHODOLOGY.md       assumptions, formulas, evidence and sources
+docs/adr/                 key design decisions
+dist/bidgate.html         portable single-file build
+```
 
-- **Gates before scores.** A compensatory model cannot represent "no". ([ADR-0002](docs/adr/0002-gates-precede-score.md))
-- **Two axes, not one.** Attractiveness and winnability are different questions with different owners. ([ADR-0003](docs/adr/0003-two-axes.md))
-- **Swing/AHP over direct weights.** Direct weighting is the method the UK Analysis Function says not to use. ([ADR-0004](docs/adr/0004-swing-and-ahp.md))
-- **Beta-PERT, not triangular.** Softer tails, mass near the mode. ([ADR-0005](docs/adr/0005-beta-pert.md))
-- **No regression until 60 outcomes.** Below that, show separation and let people reason. ([ADR-0006](docs/adr/0006-no-model-before-60.md))
-- **Single file, no build.** The user is an estimating manager, not a developer; it has to open from a USB stick. ([ADR-0001](docs/adr/0001-single-file-no-build.md))
-- **Local-first.** Bid data is commercially sensitive. localStorage and URL fragments only. ([ADR-0007](docs/adr/0007-local-first.md))
-- **Okabe-Ito RAG, dual-encoded.** 1 in 12 men cannot rely on red/green; every state carries an icon and a word. ([ADR-0008](docs/adr/0008-okabe-ito.md))
-- **Radio buttons, not sliders.** Sliders raise break-off 6.9× and degrade ordinal data (Funke, Reips & Thomas 2011) (the swing-weighting tool uses a range input for weights only, where the value is continuous and no ordinal data is collected).
+## Key design decisions
 
-## Roadmap
+The ADRs preserve the reasoning behind important choices rather than just the final implementation.
 
-- [ ] Blind multi-rater mode with per-criterion disagreement bands
-- [ ] Logistic fit unlocked at ≥ 60 decided outcomes, coefficients shown beside your weights
-- [ ] Optional bring-your-own-key AI pre-scoring: paste a tender, get proposed scores with quoted evidence (drafts, cites, never decides); gates are never AI-set
-- [ ] Portfolio selector: enumerate pursue/skip combinations for ≤ 8 open pursuits under worst-case cash and staffing
-- [ ] Per-GC retention-release history learned from your own pipeline
+- **Gates before scores** — a compensatory score cannot represent a genuine “no”.
+- **Two axes, not one** — attractiveness and winnability answer different management questions.
+- **Swing/AHP weighting** — makes trade-offs more explicit than arbitrary percentage allocation.
+- **No predictive fit until sufficient outcomes exist** — avoid false sophistication from a small sample.
+- **Local-first portfolio build** — bid information is commercially sensitive.
+- **Accessible decision states** — status is carried by words/icons as well as colour.
+- **Portable release** — the standalone version can run without a hosted application stack.
 
-## Why I built this
+## Scope and limitations
 
-I was a Project Manager at a commercial builder doing flooring and tile delivery, bidding multi-family, apartment and commercial building packages worth US$100K–$4M per discipline as a specialty subcontractor to general contractors. Alongside project management I ran and audited the three-person commercial estimating team. One recurring job type was artificial-turf installation for a school athletic facility, which is why specialty/athletic surfaces get their own preset here.
+BidGate currently models the perspective of a **US flooring, tile and specialty-surface subcontractor bidding to general contractors**. It is not a universal construction procurement model, legal advice, a production ERP/CRM, or an autonomous bidding system.
 
-I built a bid-qualification calculator there that scored relationship strength, historical win record and expected revenue, alongside payment terms and the GC's ability to pay, scope clarity, whether we'd delivered that building type before, how full the estimating queue already was, deal size and margin, and how many other bidders we were up against. Scored by hand, updated in a Monday meeting. It cut rework 30%, lifted average margin 8%, and moved us from bidding one major job every two weeks to two-to-four a week (small bids from two-to-four days down to hours-to-a-day), and from losing most bids to winning the majority of the qualified ones. This is what that spreadsheet should have been: the same questions, with a gate that stops a good total from hiding a disqualifying answer, the uncertainty shown instead of hidden, and every assumption written down and sourced.
+The sample bids are synthetic. No employer, client or confidential project data are included in this repository.
 
-I reused engine and testing infrastructure I'd already built and validated on an earlier go/no-go tool, then did the domain redesign specifically for this niche: the 42 criteria, the gates, the weights, the presets. Full history is in [docs/METHODOLOGY.md](docs/METHODOLOGY.md).
+Known modelling and implementation limits are documented rather than hidden: [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 
-Before publishing, BidGate went in front of two operations and logistics managers based in Australia, who validated the use case and asked for flexible data import and export so a bid could move in and out of their own systems. The JSON export/import and URL-fragment sharing are a direct answer to that request.
+## Further development
 
-I use AI the same way at work: I own the domain model, the assumptions and what ships; the AI does research synthesis and code. Built with Claude as a pair on this one, research synthesis across roughly 150 sources, engine design and test scaffolding. Every formula, threshold and weight has a source or is labelled as a judgement call. All sample data is synthetic; no employer data, prices or projects appear anywhere in this repository.
+Potential next steps include blind multi-rater scoring, portfolio optimisation across simultaneous pursuits, company-specific retention history and—only after enough decided outcomes exist—an interpretable fitted model alongside management-set weights.
 
-This is one piece of a small portfolio of tools built from operations work rather than tutorials: qualifying flooring/tile bids to GCs here, catching job-cost and schedule risk on live builds in [job-cost-risk-dashboard](https://github.com/NathanTaylorOps/job-cost-risk-dashboard), running field operations for a custom-home GC in [resource-scheduling-tracking-system](https://github.com/NathanTaylorOps/resource-scheduling-tracking-system), and GM-level scenario modeling in [scenario-sensitivity-engine](https://github.com/NathanTaylorOps/scenario-sensitivity-engine).
+An AI-assisted tender review could also propose scores from cited tender evidence, but it should remain draft support: **AI should not clear a hard gate or make the pursuit decision.**
 
-## Licence
+## Related operations projects
 
-MIT. Use it, fork it, put your own weights in. Attribution appreciated, not required.
+BidGate is one part of a portfolio built around operating questions rather than software tutorials:
+
+- **[Job Cost Risk Dashboard](https://github.com/NathanTaylorOps/job-cost-risk-dashboard)** — which active project needs intervention, and why?
+- **[Resource Scheduling & Tracking](https://github.com/NathanTaylorOps/resource-scheduling-tracking-system)** — are the people, equipment, permits and compliance ready for tomorrow's work?
+- **[Scenario Sensitivity Engine](https://github.com/NathanTaylorOps/scenario-sensitivity-engine)** — does an investment still make sense when the assumptions move?
+- **[Days of Cover](https://github.com/NathanTaylorOps/DaysofCover)** — where does the supply network fail first, and which mitigation buys the most resilience?
+
+Together they reflect the same operating approach: **make the constraint visible, expose the assumptions, assign the decision, test the result and improve the system.**
 
 ## About
 
-Built by Nathan Taylor. Operations and estimating background in construction, now building tools for the problems that background surfaced. [nathan.taylor.ops@gmail.com](mailto:nathan.taylor.ops@gmail.com)
+Built by **Nathan Taylor**, an operations leader with experience across construction, manufacturing, defence and asset-heavy environments. My focus is using commercial discipline, operating systems, data and technology to make decisions easier to see, explain and act on.
+
+**[View the full operations portfolio](https://github.com/NathanTaylorOps)**
+
+## Licence
+
+MIT.
