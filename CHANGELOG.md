@@ -2,6 +2,14 @@
 
 Notable changes to the public portfolio release are recorded here.
 
+### Unreleased
+
+- Refined the public narrative around commercial pursuit governance, decision rights and operating implementation.
+- Added a management case study, implementation/governance guide and explicit limitations.
+- Strengthened Decision, Pursuit Portfolio and Calibration language and aligned the printable output as a Commercial Pursuit Decision Memo.
+- Aligned application, package metadata, evidence assets and research provenance with the current portfolio scope.
+
+
 ## [1.0.0] — Portfolio release
 
 - Structured gate-first bid qualification with separate attractiveness and winnability views.
