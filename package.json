@@ -1,7 +1,7 @@
 {
   "name": "bidgate",
   "version": "1.0.0",
-  "description": "Go / no-go bid qualification for flooring, tile and specialty-surface subcontractors. Gates before scores, EV with uncertainty, materials & installation risk, calibration loop.",
+  "description": "Commercial bid-governance and pursuit decision support for specialty contractors, combining hard gates, economics, cash exposure, capacity, uncertainty and outcome calibration.",
   "type": "module",
   "private": true,
   "scripts": {
@@ -24,5 +24,14 @@
   "bugs": {
     "url": "https://github.com/NathanTaylorOps/bidgate/issues"
   },
-  "keywords": ["bid-qualification", "go-no-go", "estimating", "construction", "subcontractor", "decision-support"]
+  "keywords": [
+    "operations-management",
+    "commercial-management",
+    "construction-management",
+    "bid-management",
+    "decision-support",
+    "risk-management",
+    "estimating",
+    "operations-research"
+  ]
 }
