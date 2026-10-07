@@ -50,7 +50,7 @@ html = html.replace(
   '<script src="./vendor/chart.umd.min.js"></script>',
   `<script>\n${chartSrc}\n</script>`
 );
-html = html.replace('<title>BidGate</title>', '<title>BidGate</title>\n<!-- Single-file build. Source: https://github.com/NathanTaylorOps/bidgate -->');
+html = html.replace('</head>', '<!-- Single-file build. Source: https://github.com/NathanTaylorOps/bidgate -->\n</head>');
 // index.html already links METHODOLOGY.md by absolute GitHub URL (the single file may be opened from a USB stick,
 // where a relative docs/ link would dangle). This rewrite is kept as a no-op-safe guard should it ever go relative again.
 html = html.replace('href="docs/METHODOLOGY.md"', 'href="https://github.com/NathanTaylorOps/bidgate/blob/main/docs/METHODOLOGY.md"');
