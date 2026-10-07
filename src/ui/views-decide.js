@@ -112,9 +112,9 @@ export function renderPipeline(main, d, X) {
 
   main.innerHTML = `
   <div class="card">
-    <h2>Pipeline — attractiveness × winnability <span class="pill neutral">bubble = value</span></h2>
+    <h2>Pursuit portfolio — attractiveness × winnability <span class="pill neutral">bubble = value</span></h2>
     ${saved.length ? `<div class="chart" style="height:320px"><canvas id="bubble" aria-label="Pipeline bubble chart"></canvas></div>
-    <p class="small" style="margin-top:6px">GE/McKinsey-style 2×2. The score conflates two questions — should we want it, and can we win it — so they are plotted separately. Pursue top-right; decline bottom-left; top-left is where relationship-building belongs, not estimating hours.</p>` : '<div class="empty">No saved bids. Score a bid and press Save, or load the samples from Settings.</div>'}
+    <p class="small" style="margin-top:6px">The portfolio separates two management questions: should we want the work, and can we win it? Top-right opportunities warrant attention; bottom-left opportunities generally do not. High-attractiveness / low-winnability opportunities may justify relationship development before estimating effort.</p>` : '<div class="empty">No saved bids. Score a bid and press Save, or load the samples from Settings.</div>'}
   </div>
   <div class="card">
     <h2>Saved bids <span class="row" style="gap:6px"><button type="button" class="btn sm" id="plCsv">Export CSV</button><button type="button" class="btn sm" id="plCompare" ${saved.length < 2 ? 'disabled' : ''}>Compare selected</button></span></h2>
@@ -185,7 +185,7 @@ export function renderCalibration(main, d, X) {
 
   main.innerHTML = `
   <div class="card">
-    <h2>Calibration — does the tool predict what actually happens?</h2>
+    <h2>Calibration — are our forecasts and decisions improving?</h2>
     <div class="cols">
       <div class="kpi"><div class="v">${decided.length}</div><div class="l">Decided outcomes (won/lost)</div></div>
       <div class="kpi"><div class="v" style="color:${bs == null ? '' : bs < 0.2 ? 'var(--good)' : bs < 0.25 ? 'var(--warn)' : 'var(--bad)'}">${bs == null ? '–' : bs.toFixed(3)}</div><div class="l">Brier score (0.25 = always 50 %)</div></div>
@@ -193,7 +193,7 @@ export function renderCalibration(main, d, X) {
       <div class="kpi"><div class="v">${ovr ? pct(ovr.rate, 0) : '–'}</div><div class="l">Human override rate</div></div>
       <div class="kpi"><div class="v" style="color:${fade == null ? '' : fade < -2 ? 'var(--bad)' : 'var(--good)'}">${fade == null ? '–' : (fade > 0 ? '+' : '') + fade.toFixed(1) + ' pts'}</div><div class="l">Avg margin fade (actual − bid)</div></div>
     </div>
-    ${decided.length < 60 ? `<div class="callout small" style="margin-top:10px">You have ${decided.length} decided outcome${decided.length === 1 ? '' : 's'}. Record won / lost on the Pipeline tab as bids resolve. Once an outcome is recorded the forecast on that row is frozen, so this page always compares what was predicted with what happened. Below 60 outcomes, do not fit a model — look at the separation table and reason.</div>` : ''}
+    ${decided.length < 60 ? `<div class="callout small" style="margin-top:10px">You have ${decided.length} decided outcome${decided.length === 1 ? '' : 's'}. Record won / lost on the Pipeline tab as bids resolve. Once an outcome is recorded the forecast on that row is frozen, so this page always compares what was predicted with what happened. Below 60 outcomes, treat the diagnostics as directional evidence rather than fitting a predictive model.</div>` : ''}
   </div>
   <div class="cols-2">
     <div class="card" style="margin:0">
@@ -210,11 +210,11 @@ export function renderCalibration(main, d, X) {
     </div>
   </div>
   <div class="card">
-    <h2>Which criteria separate wins from losses <span class="pill neutral">explore, not optimise</span></h2>
+    <h2>Which criteria separate wins from losses <span class="pill neutral">directional evidence</span></h2>
     ${sep.length ? `<div class="tbl-wrap"><table><thead><tr><th>Criterion</th><th class="num">Won mean</th><th class="num">Lost mean</th><th class="num">Separation</th><th class="num">n</th></tr></thead><tbody>
       ${sep.map(s => `<tr><td class="small">${esc(CRITERIA_BY_ID[s.id]?.name || s.id)}</td><td class="num">${num(s.wonMean, 2)}</td><td class="num">${num(s.lostMean, 2)}</td><td class="num" style="color:${s.separation > 0 ? 'var(--good)' : s.separation < 0 ? 'var(--bad)' : ''}">${s.separation == null ? '–' : (s.separation > 0 ? '+' : '') + s.separation.toFixed(2)}</td><td class="num">${s.nWon + s.nLost}</td></tr>`).join('')}
     </tbody></table></div>
-    <p class="small" style="margin-top:6px">Positive separation: you win when this scores high. Negative: you win the ones that scored low here — either the criterion is mis-anchored or you are winning work you should not. Lowe &amp; Parvar (2004) and Leśniak (2021) show 6–8 firm-specific variables carry the signal; at ≥ 60 outcomes a logistic fit becomes defensible. Not before.</p>` : '<div class="empty">Needs decided outcomes with scores.</div>'}
+    <p class="small" style="margin-top:6px">Positive separation means wins have scored higher on this criterion in the recorded sample; negative separation means the opposite. Use the pattern to challenge assumptions and scoring anchors, not as proof of causation. A fitted model should wait until enough company-specific outcomes exist to support validation.</p>` : '<div class="empty">Needs decided outcomes with scores.</div>'}
   </div>`;
 
   if (decided.length) C.reliability('relChart', rel);
@@ -240,7 +240,7 @@ export function renderMemo(d, state) {
   const notes = r.criteria.filter(c => b.notes[c.id] && b.notes[c.id].trim()).slice(0, 8);
   const decisionLabel = { bid: 'Bid', bid_conditional: 'Bid with conditions', courtesy: 'Courtesy bid', decline: 'Decline', defer: 'Defer — need information' }[dec.decisionTaken] || '—';
   return `
-  <div class="mhead"><h1>Go / No-Go Decision Memo</h1><div class="mprep">${esc(d.p.label)} · prepared ${new Date().toLocaleDateString(d.p.locale.locale)}</div></div>
+  <div class="mhead"><h1>Commercial Pursuit Decision Memo</h1><div class="mprep">${esc(d.p.label)} · prepared ${new Date().toLocaleDateString(d.p.locale.locale)}</div></div>
   <div class="meta">
     <div><b>Project</b> ${esc(b.name || 'Unnamed')}</div><div><b>GC / source</b> ${esc(b.client || '–')}</div>
     <div><b>Value</b> ${money(b.value)} · ${b.durationMonths || '–'} mo</div><div><b>Route</b> ${esc(d.route.label)} · ${b.competitors ?? d.route.typicalBidders} competitors</div>
@@ -275,6 +275,6 @@ export function renderMemo(d, state) {
   ${notes.length ? `<h2>Evidence notes</h2><ul class="tight notes">${notes.map(c => `<li><b>${esc(c.name)}</b> (${b.scores[c.id] ?? '–'}): ${esc(cut(b.notes[c.id]))}</li>`).join('')}</ul>` : ''}
   <h2>Decision</h2>
   <p><b>Decision taken:</b> ${esc(decisionLabel)} &nbsp;·&nbsp; <b>By:</b> ${esc(dec.decidedBy || '—')} &nbsp;·&nbsp; <b>Date:</b> ${esc(dec.decidedAt || '—')}${dec.overrideReason ? ` &nbsp;·&nbsp; <b>Override reason:</b> ${esc(cut(dec.overrideReason))}` : ''}</p>
-  <div class="sig"><div>Estimating</div><div>Operations</div><div>Owner / Director</div></div>
+  <div class="sig"><div>Prepared by</div><div>Operations / Commercial</div><div>Approver</div></div>
   <p class="foot">Generated by BidGate. Gates are non-compensatory; a verdict needs every gate criterion scored and ≥ ${(r.coverageThreshold * 100).toFixed(0)} % of the weighted card. Weights: ${Object.entries(d.p.weights).filter(([k, v]) => k !== 'compete' && v > 0).map(([k, v]) => `${k} ${v}`).join(', ')}. All thresholds are configurable, dated defaults — see METHODOLOGY.md.</p>`;
 }
