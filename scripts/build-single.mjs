@@ -20,7 +20,7 @@ function collect(abs) {
   const key = keyFor(abs);
   if (modules.has(key)) return;
   modules.set(key, ''); // reserve first — breaks import cycles
-  let src = fs.readFileSync(abs, 'utf8');
+  let src = fs.readFileSync(abs, 'utf8').replace(/\r\n?/g, '\n');
   const dir = path.dirname(abs);
   const rewrite = (spec) => {
     if (!spec.startsWith('.')) return spec;
@@ -38,14 +38,14 @@ collect(path.join(root, entry));
 const imports = {};
 for (const [k, src] of modules) imports[k] = 'data:text/javascript;base64,' + Buffer.from(src, 'utf8').toString('base64');
 
-let html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+let html = fs.readFileSync(path.join(root, 'index.html'), 'utf8').replace(/\r\n?/g, '\n');
 const importMap = `<script type="importmap">${JSON.stringify({ imports })}</script>`;
 html = html.replace(/<script type="module" src="\.\/src\/ui\/app\.js"><\/script>/, `${importMap}\n<script type="module">import 'bidgate/${entry}';</script>`);
 
 // Chart.js is vendored in the repo (see vendor/README.md) specifically so this single file has
 // no runtime network dependency. Inline its source instead of the <script src="./vendor/..."> tag
 // so dist/bidgate.html stays a true single file — no sibling vendor/ folder needed to open it.
-const chartSrc = fs.readFileSync(path.join(root, 'vendor', 'chart.umd.min.js'), 'utf8');
+const chartSrc = fs.readFileSync(path.join(root, 'vendor', 'chart.umd.min.js'), 'utf8').replace(/\r\n?/g, '\n');
 html = html.replace(
   '<script src="./vendor/chart.umd.min.js"></script>',
   `<script>\n${chartSrc}\n</script>`
