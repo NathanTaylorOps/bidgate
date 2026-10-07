@@ -8,11 +8,13 @@ BidGate helps answer a management question that sits upstream of estimating:
 
 It combines hard commercial gates, bid attractiveness, probability of win, margin and expected value, cash exposure, delivery capacity, uncertainty and an auditable approval record. It is a portfolio project built from operating experience, not a claim of production deployment.
 
-**[Open the live demo](https://NathanTaylorOps.github.io/bidgate/)** · **[View an example one-page decision memo](assets/memo.pdf)** · **[Read the methodology](docs/METHODOLOGY.md)**
+**[Open the live demo](https://NathanTaylorOps.github.io/bidgate/)** · **[Read the management case study](docs/CASE_STUDY.md)** · **[View the one-page decision memo](assets/memo.pdf)** · [Methodology](docs/METHODOLOGY.md)
 
 [![CI](https://github.com/NathanTaylorOps/bidgate/actions/workflows/ci.yml/badge.svg)](https://github.com/NathanTaylorOps/bidgate/actions/workflows/ci.yml) [![licence](https://img.shields.io/badge/licence-MIT-8f96ad)](LICENSE)
 
 ![BidGate decision view](assets/decision.png)
+
+> **For hiring managers and recruiters:** the [management case study](docs/CASE_STUDY.md) is the fastest way to see the operating problem, decision logic, implementation approach and results behind the project.
 
 ## Why this exists
 
@@ -118,7 +120,7 @@ A production deployment would require company-specific authority limits and thre
 
 The adoption process matters as much as the software: establish the existing decision baseline, agree decision rights, configure thresholds, run the system in parallel, train users, review exceptions and false signals, then progressively integrate it into the operating cadence.
 
-See **[Implementation & Governance](docs/IMPLEMENTATION.md)** and **[Limitations](docs/LIMITATIONS.md)**.
+See the **[Management Case Study](docs/CASE_STUDY.md)**, **[Implementation & Governance](docs/IMPLEMENTATION.md)** and **[Limitations](docs/LIMITATIONS.md)**.
 
 ## Validation and quality controls
 
