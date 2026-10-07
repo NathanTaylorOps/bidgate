@@ -71,7 +71,7 @@ export function renderDecision(main, d, X) {
 
   ${isGo ? `<div class="card">
     <h2>Pre-mortem <span class="pill mid">required on GO</span></h2>
-    <p style="margin-bottom:8px">It is 18 months from now and this job lost money. Write three reasons. (Prospective hindsight surfaces ≈ 30 % more causes — Mitchell, Russo &amp; Pennington 1989.)</p>
+    <p style="margin-bottom:8px">It is 18 months from now and this job lost money. Write three plausible reasons before committing to the pursuit.</p>
     <div class="stack">${[0, 1, 2].map(i => `<div class="field"><input data-pm="${i}" value="${esc(dec.premortem[i] || '')}" placeholder="Reason ${i + 1}"></div>`).join('')}</div>
     <div class="callout small" style="margin-top:10px"><b>Devil's advocate:</b><ul style="margin:4px 0 0 16px">${devil.map(q => `<li>${esc(q)}</li>`).join('')}</ul></div>
   </div>` : ''}
