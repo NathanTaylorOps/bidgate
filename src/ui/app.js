@@ -105,7 +105,7 @@ export function renderSide() {
   else if (band.id === 'GATED') why = `${d.allGates.length} gate${d.allGates.length > 1 ? 's' : ''} active — disqualified regardless of score.`;
   else if (band.id === 'INCOMPLETE') why = incompleteWhy(r);
   else if (r.floorHits.length) why = `Capped at CONDITIONAL: ${r.floorHits.map(f => f.name).join('; ')} scored ≤ 2.`;
-  else if (band.id === 'GO') why = 'Strong fit. Run the pre-mortem before committing estimating hours.';
+  else if (band.id === 'GO') why = 'Strong fit against the current criteria. Confirm assumptions and review the pre-mortem before committing estimating hours.';
   else if (band.id === 'APPROVAL') why = 'Proceed only with a named approver and conditions recorded.';
   else if (band.id === 'CONDITIONAL') why = 'Identify the weakest links and what would flip this before spending on the bid.';
   else why = 'Insufficient alignment. Decline or seek further information.';
