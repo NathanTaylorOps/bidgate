@@ -164,7 +164,7 @@ See the **[Management Case Study](docs/CASE_STUDY.md)**, **[Implementation & Gov
 
 ## Validation and quality controls
 
-The decision engine is separated from the interface and tested as business logic. The current suite covers the scoring, gate, economics, capacity, uncertainty and calibration paths. CI runs the tests, rebuilds the standalone release, verifies that the committed build matches source and performs browser smoke tests before deployment.
+The decision engine is separated from the interface and tested as business logic. The current suite contains **44 engine tests** covering criteria integrity, gate behaviour, verdict bands, weighting, win probability, economics, cash/capacity, uncertainty, migration/share-state behaviour and calibration. CI runs the tests, rebuilds the standalone release, verifies that the committed build matches source and performs browser smoke tests before deployment.
 
 That matters because a decision-support system should fail visibly when its rules are broken rather than quietly changing management outcomes after a code change.
 
